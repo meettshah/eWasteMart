@@ -7,8 +7,8 @@ export const siteConfig = {
       href: "/",
     },
     {
-      label: "Records",
-      href: "/Records",
+      label: "Recyclers",
+      href: "/recyclers",
     },
     {
       label: "Create",

@@ -19,7 +19,7 @@ export default function Nav() {
 
 
   return (
-    <Navbar maxWidth="xl" position="sticky" isBlurred={false} isBordered onMenuOpenChange={setIsMenuOpen}>
+    <Navbar maxWidth="xl" position="sticky" isBlurred={false} onMenuOpenChange={setIsMenuOpen}>
       <NavbarContent justify="start">
         <NavbarBrand>
           <Image 
