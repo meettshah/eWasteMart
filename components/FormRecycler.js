@@ -90,7 +90,7 @@ const removeProperty = (index) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5 border-gray-300 w-[555px] mx-auto py-12 rounded-3xl shadow-lg'>
+    <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5 border-gray-300 mx-auto px-10 shadow-md max-w-[600px] w-[600px] py-12 rounded-3xl'>
       <div className='flex flex-col '>
         <label htmlFor="name">Full Name</label>
         <Controller

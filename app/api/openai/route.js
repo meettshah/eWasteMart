@@ -1,16 +1,15 @@
-import { NextResponse } from "next/server";
 import runPrompt from "@/ai/openai";
+import { NextResponse } from "next/server";
 
 const aiHandler = async (req) => {
 
     if (req.method === "POST") {
         const data = await req.json();
+
+        // console.log(data);
         const completion = await runPrompt(data.content);
-        return new Response(JSON.stringify(completion), {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+
+        return NextResponse.json({ completion });
     }
 }
 

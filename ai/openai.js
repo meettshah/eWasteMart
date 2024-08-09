@@ -1,8 +1,24 @@
 import Together from "together-ai";
 
+
 const together = new Together({
-  apiKey: process.env["TOGETHER_API_KEY"],
+    apiKey: process.env.TOGETHER_API_KEY,
 });
+
+const fineTuneModel = async () => {
+    const response = await together.ai.finetune.create({
+        model: "meta-llama/Meta-Llama-3-8B-Instruct-Turbo",
+        dataset: JSON.stringify(), // Assuming myDataset is a JavaScript object or array
+        epochs: 3,
+        learningRate: 1e-5,
+        batchSize: 8
+    });
+
+    console.log("Fine-tuning complete:", response);
+};
+
+fineTuneModel();
+
 
 const systemPrompt = `
 *System Prompt for AI Chatbot Integration:*
@@ -55,14 +71,22 @@ const systemPrompt = `
 
 `;
 
-const runPrompt = async ({ content }) => {
-const response = await together.chat.completions.create({
-  model: "meta-llama/Meta-Llama-3-8B-Instruct-Turbo",
-  messages: [{role: 'system', content: systemPrompt},{ role: "user", content: content }],
-});
+const runPrompt = async (content) => {
+    const response = await together.chat.completions.create({
+        model: "meta-llama/Meta-Llama-3-8B-Instruct-Turbo",
+        messages: [{ role: 'system', content: systemPrompt }, { role: "user", content: content }],
+    });
 
-console.log(response.choices[0].message.content);
-return response.choices[0].message.content;
+    // for await (const chunk of stream) {
+    //     process.stdout.write(chunk.choices[0]?.delta?.content || '');
+    // }
+
+    if (response.choices && response.choices.length > 0) {
+        return response.choices[0].message.content;
+    } else {
+        console.error("No choices returned in the response.");
+        return null;
+    }
 }
 
 export default runPrompt;
