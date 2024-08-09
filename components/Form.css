@@ -1,0 +1,12 @@
+.box{
+    width: 400px;
+    /* text-align-last:center; */
+    justify-content: center
+}
+.center {
+    border: 5px solid ;
+    margin: auto;
+    width: 28%;
+    padding: 10px;
+    border-radius: 2%;
+  }
