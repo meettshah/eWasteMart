@@ -1,6 +1,6 @@
-"use client"
-import React from "react";
-import {Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link, Button} from "@nextui-org/react";
+"use client";
+import React, { useState } from "react";
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link, Button } from "@nextui-org/react";
 import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import { ThemeSwitch } from "./theme-switch";
@@ -9,20 +9,29 @@ import clsx from "clsx";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import AuthModal from "./AuthModal";
-// import { useSession } from "next-auth/react";
 
 export default function Nav() {
-  // const { data: session } = useSession();
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
+  const profileImageUrl = "/profile1.png";
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleMenuClick = (href) => {
+    setIsDropdownOpen(false);
+    router.push(href);
+  };
 
   return (
     <Navbar maxWidth="xl" position="sticky" isBlurred={false} onMenuOpenChange={setIsMenuOpen}>
       <NavbarContent justify="start">
         <NavbarBrand>
-          <Image 
+          <Image
             src={'/logo.png'}
             width={36}
             height={36}
@@ -33,23 +42,49 @@ export default function Nav() {
         </NavbarBrand>
       </NavbarContent>
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
-            {siteConfig.navItems.map((item) => (
-                <NavbarItem key={item.href} isActive={(pathname === item.href) ? 1: 0}>
-                <NextLink
-                    className={`  ${ (pathname === item.href) ? 'text-primary' : 'text-black dark:text-white font-semibold '}`}
-                    href={item.href}
-                >
-                    {item.label}
-                </NextLink>
-                </NavbarItem>
-            ))}
+        {siteConfig.navItems.map((item, index) => (
+          <NavbarItem key={item.href} isActive={(pathname === item.href) ? 1 : 0}>
+            <NextLink
+              className={` ${(pathname === item.href) ? 'text-primary' : 'text-black dark:text-white font-semibold '}`}
+              href={item.href}
+            >
+              {item.label}
+            </NextLink>
+          </NavbarItem>
+        ))}
       </NavbarContent>
 
       <NavbarContent justify="end">
-        <NavbarItem className="hidden sm:flex">
-          <Link className=""></Link>
-        </NavbarItem>
         <ThemeSwitch />
+        <NavbarItem className="hidden sm:flex relative">
+          <div className="relative">
+            <Image
+              src={profileImageUrl}
+              width={38}
+              height={38}
+              className="rounded-full ml-4 cursor-pointer"
+              alt="Profile"
+              onClick={toggleDropdown}
+            />
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 dark:bg-gray-900 bg-white shadow-lg rounded-md py-2 z-50">
+                {[
+                  { label: "Profile", href: "/profile" },
+                  { label: "Settings", href: "/settings" },
+                  { label: "Logout", href: "/logout" }
+                ].map((item, index) => (
+                  <a
+                    key={index}  // Ensure this key is unique
+                    onClick={() => handleMenuClick(item.href)}
+                    className="block px-4 py-2 dark:text-gray-100 text-gray-800 dark:hover:bg-[rgb(103,232,67)] hover:bg-gray-100 cursor-pointer"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </NavbarItem>
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           className="sm:hidden"
@@ -57,20 +92,20 @@ export default function Nav() {
       </NavbarContent>
       <NavbarMenu>
         {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-                <NextLink
-                color={
-                    (index === 2) ? "primary" : (index === siteConfig.navMenuItems.length - 1) ? "primary" : "foreground"
-                }
-                className={`w-full ${(pathname === item.href) ? "text-primary font-semibold": ""}`}
-                href={item.href}
-                size="lg"
-                >
-                {item.label}
-                </NextLink>
-            </NavbarMenuItem>
+          <NavbarMenuItem key={item.href}>  {/* Added key prop here */}
+            <NextLink
+              color={
+                (index === 2) ? "primary" : (index === siteConfig.navMenuItems.length - 1) ? "primary" : "foreground"
+              }
+              className={`w-full ${(pathname === item.href) ? "text-primary font-semibold" : ""}`}
+              href={item.href}
+              size="lg"
+            >
+              {item.label}
+            </NextLink>
+          </NavbarMenuItem>
         ))}
-        <NavbarMenuItem>
+        <NavbarMenuItem key="auth-modal"> {/* Added key prop here */}
           <AuthModal />
         </NavbarMenuItem>
       </NavbarMenu>
