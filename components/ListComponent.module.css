@@ -11,7 +11,7 @@
     bottom: 0;
     left: 0; 
     height: 2px;
-    background: #0badf2;
+    background: rgb(40, 109, 21);
     transition: width 0.3s ease;
 }
 .btn:hover::before{
@@ -19,5 +19,5 @@
 }
 
 .btn:hover{
-    color: #0badf2;
+    color: rgb(40, 109, 21);
 }

@@ -10,7 +10,7 @@ const cardData = [
     "imgUrl": "/card_img_03.jpg" 
   },
   { 
-    "title": "Certified Recycling Partners", 
+    "title": "Recycling Partners", 
     "description": "Partnering with certified recyclers ensures safe, compliant e-waste recycling.", 
     "imgUrl": "/card_img_02.jpg" 
   },

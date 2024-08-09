@@ -208,20 +208,21 @@ const FormRecycler = () => {
           className="flex gap-2"
         >
           {!!images?.length &&
-            images.map((link, index) => (
-              <div
-                key={link} // Use the link itself as a unique key
-                className="bg-white border border-gray-300 shadow-md rounded-sm h-28"
-              >
-                <Image
-                  className="image object-cover w-28 h-28"
-                  width={100}
-                  height={100}
-                  src={link}
-                  alt="product"
-                />
-              </div>
-            ))}
+  images.map((link, index) => (
+    <div
+      key={link} // Assuming link is unique
+      className="bg-white border border-gray-300 shadow-md rounded-sm h-28"
+    >
+      <Image
+        className="image object-cover w-28 h-28"
+        width={100}
+        height={100}
+        src={link}
+        alt="product"
+      />
+    </div>
+  ))}
+
         </ReactSortable>
         {isUploading && (
           <div className="flex justify-center items-center bg-white shadow-md border border-gray-300 w-28 h-28 rounded-sm cursor-pointer">
@@ -265,37 +266,39 @@ const FormRecycler = () => {
           Add New Property
         </button>
         {properties.length > 0 &&
-          properties.map((property, index) => (
-            <div key={index} className="flex gap-1 mt-2">
-              <input
-                value={property.name}
-                onChange={(ev) => {
-                  propertyNameChange(index, ev.target.value);
-                }}
-                className="m-0"
-                type="text"
-                placeholder="Property Name (example: color)"
-              />
-              <input
-                value={property.values}
-                onChange={(ev) => {
-                  propertyValueChange(index, ev.target.value);
-                }}
-                className="m-0"
-                type="text"
-                placeholder="Values (comma separated)"
-              />
-              <button
-                onClick={() => {
-                  removeProperty(index);
-                }}
-                type="button"
-                className="btn-red font-semibold"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
+  properties.map((property, index) => (
+    <div key={index} className="flex gap-1 mt-2">
+      <input
+        value={property.name}
+        onChange={(ev) => {
+          propertyNameChange(index, ev.target.value);
+        }}
+        className="m-0"
+        type="text"
+        placeholder="Property Name (example: color)"
+      />
+      <input
+        value={property.values}
+        onChange={(ev) => {
+          propertyValueChange(index, ev.target.value);
+        }}
+        className="m-0"
+        type="text"
+        placeholder="Values (comma separated)"
+      />
+      <button
+        onClick={() => {
+          removeProperty(index);
+        }}
+        type="button"
+        className="btn-red font-semibold"
+      >
+        Remove
+      </button>
+    </div>
+  ))}
+
+
       </div>
       <Button
         variant="solid"
