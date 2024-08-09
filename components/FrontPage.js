@@ -4,7 +4,7 @@ import Chips from './Chips'
 const FrontPage = () => {
   return (
     <>
-      <div className='w-screen bg-white dark:bg-black top-[65px] absolute h-screen'>
+      <div className='w-full bg-white dark:bg-black top-[65px] absolute h-screen'>
         <div className='absolute w-[24rem] h-72 bg-violet-500 opacity-90 bottom-[20%] right-[10%] rounded-3xl blur-3xl'></div>
         <div className='absolute w-[24rem] h-72 bg-pink-500 opacity-90 top-[20%] left-[10%] rounded-3xl blur-3xl'></div>
       </div>
