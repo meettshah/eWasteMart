@@ -11,13 +11,13 @@ export const siteConfig = {
       href: "/recyclers",
     },
     {
-      label: "Create",
-      href: "/Create",
+      label: "Collaborators",
+      href: "/collaborators",
     },
     {
       label: "About Us",
       href: "/about",
-    }
+    },
   ],
   navMenuItems: [
     {
@@ -27,10 +27,6 @@ export const siteConfig = {
       {
         label: "Records",
         href: "/Records",
-      },
-      {
-        label: "Create",
-        href: "/Create",
       },
       {
         label: "About Us",

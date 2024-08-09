@@ -3,38 +3,18 @@ import { useState } from "react";
 import ListComponent from "./ListComponent";
 import Image from "next/image";
 
-export default function Footer1() {
-  const [dark, setDark] = useState(true);
-  const toggleDark = () => {
-    setDark(!dark);
-  };
-  const listHeadStyle = `${
-    dark ? "text-zinc-200 " : "text-zinc-900"
-  } font-bold`;
-  ("text-lg font-semibold");
-  const listStyles = `${
-    dark ? "text-gray-300 " : "text-gray-600 "
-  } text-sm  md:text-base `;
+const Footer1 = () => {
+  const listHeadStyle = `dark:text-zinc-200 text-zinc-900 font-bold text-lg font-semibold`;
+  const listStyles = `dark:text-gray-300 text-gray-600 text-sm  md:text-base `;
   return (
     <>
       <div
-        className={`${
-          dark ? "bg-gray-200" : "bg-slate-800"
-        } w-full`}
+        className={`dark:bg-gray-200 bg-slate-800 w-full`}
       >
         <div
-          className={` pt-10 md:pt-16 ${
-            dark ? " bg-zinc-900" : "bg-zinc-50"
-          } flex flex-col justify-start w-full text-white gap-10`}
+          className={`pt-10 md:pt-16 dark:bg-zinc-900 bg-zinc-50 flex flex-col justify-start w-full text-white gap-10`}
         >
-          <button
-            onClick={toggleDark}
-            className={` ${dark ? "text-white" : "text-black"} ${
-              dark ? "bg-zinc-500" : "bg-zinc-200"
-            } w-fit rounded-xl px-3 py-2 absolute top-0`}
-          >
-            {dark ? "White" : "Dark"}
-          </button>
+
           <footer className=" w-11/12 mx-auto  flex flex-col gap-10 pb-10">
             <div className="  flex flex-col md:flex-row gap-16 md:gap-16 xl:gap-20 border-b border-gray-700 pb-12 ">
               <div className=" flex flex-col gap-4 md:w-1/4">
@@ -47,9 +27,7 @@ export default function Footer1() {
                     alt="logo"
                   />
                   <p
-                    className={`text-2xl font-semibold ${
-                      dark ? "text-zinc-200" : "text-zinc-900"
-                    }`}
+                    className={`text-2xl font-semibold dark:text-zinc-200 text-zinc-900`}
                   >
                     SecureEye
                   </p>
@@ -113,16 +91,12 @@ export default function Footer1() {
               <div className=" flex flex-col gap-2 md:gap-6">
                 <p className={listHeadStyle}>Get in touch</p>
                 <p
-                  className={` ${
-                    dark ? "text-zinc-200 " : "text-zinc-800"
-                  } text-sm font-base`}
+                  className={` dark:text-zinc-200 text-zinc-800 text-sm font-base`}
                 >
                   <ListComponent href={'#'} btnText="secureeye.123@gmail.com" />
                 </p>
                 <ul
-                  className={`flex gap-3 ${
-                    dark ? "text-zinc-200" : "text-zinc-950"
-                  }`}
+                  className={`flex gap-3 dark:text-zinc-200 text-zinc-950`}
                 >
                   <li className=" hover:-translate-y-1 transition-transform cursor-pointer hover:text-primary">
                     <svg
@@ -185,9 +159,7 @@ export default function Footer1() {
               </div>
             </div>
             <div
-              className={`flex flex-col gap-4 w-full text-sm md:text-base md:flex-row md:justify-between ${
-                dark ? "text-zinc-100" : "text-zinc-700"
-              }`}
+              className={`flex flex-col gap-4 w-full text-sm md:text-base md:flex-row md:justify-between dark:text-zinc-100 text-zinc-700`}
             >
               <p className={`font-light `}>
                 © KeyDesign WordPress Theme. All Rights Reserved.
@@ -203,3 +175,5 @@ export default function Footer1() {
     </>
   );
 }
+
+export default Footer1;
