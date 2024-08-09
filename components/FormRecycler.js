@@ -90,8 +90,8 @@ const removeProperty = (index) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5'>
-      <div className='flex flex-col'>
+    <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5 border-gray-300 w-[555px] mx-auto py-12 rounded-3xl shadow-lg'>
+      <div className='flex flex-col '>
         <label htmlFor="name">Full Name</label>
         <Controller
           name="name"
@@ -101,7 +101,6 @@ const removeProperty = (index) => {
               <input
                 type="text"
                 id='name'
-                className='w-[400px]'
                 {...field}
               />
               {errors.name && <p className='text-red-500'>{errors.name.message}</p>}
@@ -146,7 +145,6 @@ const removeProperty = (index) => {
                 <input
                   type="date"
                   id='dob'
-                  className='w-[194px]'
                   {...field}
                 />
                 {errors.birthdate && <p className='text-red-500'>{errors.birthdate.message}</p>}
@@ -165,7 +163,6 @@ const removeProperty = (index) => {
               <input
                 type="text"
                 id='address'
-                className='w-[400px]'
                 {...field}
               />
               {errors.address && <p className='text-red-500'>{errors.address.message}</p>}
@@ -183,7 +180,7 @@ const removeProperty = (index) => {
             <>
               <textarea
                 id='description'
-                className='w-[400px] h-32'
+                className='h-32'
                 {...field}
               />
               {errors.description && <p className='text-red-500'>{errors.description.message}</p>}
@@ -219,13 +216,13 @@ const removeProperty = (index) => {
       )}
       <div className="my-4">
         <h1>Properties</h1>
-        <button type='button' onClick={addProperty} className='btn-green text-sm'>Add New Property</button>
+        <Button type='button' onClick={addProperty} className='btn-green text-sm'>Add New Property</Button>
         {properties.length > 0 && properties.map((property, index) => {
           return (
             <div key={index} className='flex gap-1 mt-2'>
-              <input value={property.name} onChange={(ev) => { propertyNameChange(index, ev.target.value) }} className='m-0' type="text" placeholder='Property Name (example: color)' />
-              <input value={property.values} onChange={(ev) => { propertyValueChange(index, ev.target.value) }} className='m-0' type="text" placeholder='Values (comma seperated)' />
-              <button onClick={() => { removeProperty(index) }} type='button' className='btn-red font-semibold'>Remove</button>
+              <input value={property.name} onChange={(ev) => { propertyNameChange(index, ev.target.value) }} className='m-0' type="text" placeholder='Property Name' />
+              <input value={property.values} onChange={(ev) => { propertyValueChange(index, ev.target.value) }} className='m-0' type="text" placeholder='Values ' />
+              <Button onClick={() => { removeProperty(index) }} type='button' className='btn-red font-semibold'>Remove</Button>
             </div>
           )
         })}

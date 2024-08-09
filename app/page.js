@@ -11,8 +11,6 @@ export default function Home() {
       <FrontPage />
       <Card/>
       <Footer1 />
-    
-      
     </>
   );
 }
