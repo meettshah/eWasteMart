@@ -9,9 +9,9 @@ import { ReactSortable } from 'react-sortablejs';
 import Spinner from './Spinner';
 import axios from 'axios';
 import Image from 'next/image';
-import './Form.css';
 
-// Define the validation schema using Yup
+
+
 const schema = yup.object().shape({
   name: yup.string().required('Full Name is required'),
   birthdate: yup.date().required('Date of Birth is required'),
@@ -22,6 +22,8 @@ const schema = yup.object().shape({
 
 const FormRecycler = () => {
   const [isUploading, setIsUploading] = useState(false);
+  const [properties, setProperties] = useState([]);
+
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -32,6 +34,21 @@ const FormRecycler = () => {
       images: []
     }
   });
+
+  
+
+const addProperty = () => {
+  setProperties(prev => {
+    return [...prev, { name: '', values: '' }];
+  })
+}
+const removeProperty = (index) => {
+  setProperties(prev => {
+    const newProperties = [...prev];
+    newProperties.splice(index, 1);
+    return newProperties;
+  })
+}
 
   const images = watch('images');
 
@@ -200,6 +217,19 @@ const FormRecycler = () => {
       {!images?.length && (
         <div className='text-red-600'>No images for this person!</div>
       )}
+      <div className="my-4">
+        <h1>Properties</h1>
+        <button type='button' onClick={addProperty} className='btn-green text-sm'>Add New Property</button>
+        {properties.length > 0 && properties.map((property, index) => {
+          return (
+            <div key={index} className='flex gap-1 mt-2'>
+              <input value={property.name} onChange={(ev) => { propertyNameChange(index, ev.target.value) }} className='m-0' type="text" placeholder='Property Name (example: color)' />
+              <input value={property.values} onChange={(ev) => { propertyValueChange(index, ev.target.value) }} className='m-0' type="text" placeholder='Values (comma seperated)' />
+              <button onClick={() => { removeProperty(index) }} type='button' className='btn-red font-semibold'>Remove</button>
+            </div>
+          )
+        })}
+      </div>
       <Button variant='solid' type='submit' color='primary' className='font-semibold w-32 mx-auto'>Submit</Button>
     </form>
   );
