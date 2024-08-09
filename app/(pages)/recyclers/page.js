@@ -13,7 +13,6 @@ const Recyclers = () => {
 
   return (
     <div>
-      <button onClick={handlePress} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Button</button>
         <DivWrapper title={'Forms'}>
             <Form />
         </DivWrapper>

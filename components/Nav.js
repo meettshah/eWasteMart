@@ -51,7 +51,7 @@ export default function Nav() {
 
       <NavbarContent justify="end">
         <NavbarItem className="hidden sm:flex">
-          <AuthModal />
+          <Link className=""></Link>
         </NavbarItem>
         <ThemeSwitch />
         <NavbarMenuToggle
