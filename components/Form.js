@@ -25,7 +25,6 @@ const Form = () => {
         educational_qualification: "",
         gender: "",
     });
-    console.log(form);
 
     const uploadImages = async (ev) => {
         ev.preventDefault();
