@@ -16,7 +16,7 @@ export const siteConfig = {
     },
     {
       label: "About Us",
-      href: "/about",
+      href: "/about-us",
     },
   ],
   navMenuItems: [
@@ -29,8 +29,12 @@ export const siteConfig = {
         href: "/Records",
       },
       {
+        label: "Collaborators",
+        href: "/collaborators",
+      },
+      {
         label: "About Us",
-        href: "/about",
+        href: "/about-us",
       }
   ],
   links: {

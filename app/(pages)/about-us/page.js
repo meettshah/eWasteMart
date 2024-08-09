@@ -1,4 +1,4 @@
-
+"use client";
 
 const links = [
     { name: 'Open roles', href: '#' },
