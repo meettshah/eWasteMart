@@ -20,13 +20,15 @@ const schema = yup.object().shape({
   images: yup.array().min(1, 'At least one image is required')
 });
 
-const Form = () => {
+const FormRecycler = () => {
   const [isUploading, setIsUploading] = useState(false);
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       name: '',
+      birthdate: '',
       address: '',
+      gender: '',
       images: []
     }
   });
@@ -203,4 +205,4 @@ const Form = () => {
   );
 };
 
-export default Form;
+export default FormRecycler;

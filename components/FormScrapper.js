@@ -20,15 +20,13 @@ const schema = yup.object().shape({
   images: yup.array().min(1, 'At least one image is required')
 });
 
-const Form = () => {
+const FormScrapper = () => {
   const [isUploading, setIsUploading] = useState(false);
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       name: '',
-      birthdate: '',
       address: '',
-      gender: '',
       images: []
     }
   });
@@ -93,21 +91,25 @@ const Form = () => {
         />
       </div>
       <div className='flex flex-col'>
-        <label htmlFor="gender">Gender</label>
+        <label htmlFor="types of waste">Select types of waste</label>
         <Controller
-          name="gender"
+          name="gendergsg"
           control={control}
           render={({ field }) => (
             <>
               <select
-                id='gender'
+                id='types of waste'
                 className='flex flex-col'
                 {...field}
               >
-                <option value="">Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
+                <option value="t1">Select</option>
+                <option value="t2">Computers and Peripherals</option>
+                <option value="t3">Mobile and Personal Devices</option>
+                <option value="t4">Televisions and Displays</option>
+                <option value="t5">Audio and Video Equipment</option>
+                <option value="t6">Networking and Communication Devices</option>
+                <option value="t6">Batteries and Chargers</option>
+                <option value="t7">Other</option>
               </select>
               {errors.gender && <p className='text-red-500'>{errors.gender.message}</p>}
             </>
@@ -153,6 +155,24 @@ const Form = () => {
         />
       </div>
 
+      <div className='flex flex-col'>
+        <label htmlFor="description">Description</label>
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <>
+              <textarea
+                id='description'
+                className='w-[400px] h-32'
+                {...field}
+              />
+              {errors.description && <p className='text-red-500'>{errors.description.message}</p>}
+            </>
+          )}
+        />
+      </div>
+
       <label htmlFor="image">Person Images</label>
       <div className='mb-2 flex flex-wrap gap-2'>
         <ReactSortable list={images} setList={updateImagesOrder} className='flex gap-2'>
@@ -183,4 +203,4 @@ const Form = () => {
   );
 };
 
-export default Form;
+export default FormScrapper;
