@@ -36,7 +36,7 @@ export default function Nav() {
             {siteConfig.navItems.map((item) => (
                 <NavbarItem key={item.href} isActive={(pathname === item.href) ? 1: 0}>
                 <NextLink
-                    className={`  ${ (pathname === item.href) ? 'text-primary' : 'text-black dark:text-white font-semibold nav-links'}`}
+                    className={`  ${ (pathname === item.href) ? 'text-primary' : 'text-black dark:text-white font-semibold '}`}
                     href={item.href}
                 >
                     {item.label}
