@@ -10,7 +10,9 @@ export default function Home() {
       <Nav />
       <FrontPage />
       <Card/>
+      
       <Footer1 />
+
     </>
   );
 }

@@ -9,10 +9,10 @@ const Footer1 = () => {
   return (
     <>
       <div
-        className={`dark:bg-gray-200 bg-slate-800 w-full`}
+        className={`dark:bg-gray-200 bg-black w-full`}
       >
         <div
-          className={`pt-10 md:pt-16 dark:bg-zinc-900 bg-zinc-50 flex flex-col justify-start w-full text-white gap-10`}
+          className={`pt-10 md:pt-16 dark:bg-black bg-white flex flex-col justify-start w-full text-white gap-10`}
         >
 
           <footer className=" w-11/12 mx-auto  flex flex-col gap-10 pb-10">
@@ -162,7 +162,7 @@ const Footer1 = () => {
               className={`flex flex-col gap-4 w-full text-sm md:text-base md:flex-row md:justify-between dark:text-zinc-100 text-zinc-700`}
             >
               <p className={`font-light `}>
-                © KeyDesign WordPress Theme. All Rights Reserved.
+              Copyright © 2024 E-Waste Mart All Rights Reserved.
               </p>
               <ul className="w-full flex justify-between md:w-fit gap-9">
                 <li className="">Terms & Conditions </li>
