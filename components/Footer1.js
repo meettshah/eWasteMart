@@ -20,7 +20,7 @@ const Footer1 = () => {
               <div className=" flex flex-col gap-4 md:w-1/4">
                 <div className="logo flex items-center gap-4">
                   <Image 
-                    src={"/logo-si.svg"}
+                    src={"/logo.png"}
                     width={40}
                     height={40}
                     className="h-12 w-12 object-cover"
@@ -29,7 +29,7 @@ const Footer1 = () => {
                   <p
                     className={`text-2xl font-semibold dark:text-zinc-200 text-zinc-900`}
                   >
-                    SecureEye
+                    E-WasteMart
                   </p>
                 </div>
                 <p className={`${listStyles} text-wrap w-full leading-6`}>

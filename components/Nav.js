@@ -23,13 +23,13 @@ export default function Nav() {
       <NavbarContent justify="start">
         <NavbarBrand>
           <Image 
-            src={'/logo-si.svg'}
+            src={'/logo.png'}
             width={36}
             height={36}
             className="h-8 w-8 mr-4"
             alt="logo"
           />
-          <p className="font-bold text-inherit">SecureEye</p>
+          <p className="font-bold text-inherit">E-WasteMart</p>
         </NavbarBrand>
       </NavbarContent>
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
