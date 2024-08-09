@@ -93,7 +93,7 @@ const Footer1 = () => {
                 <p
                   className={` dark:text-zinc-200 text-zinc-800 text-sm font-base`}
                 >
-                  <ListComponent href={'#'} btnText="secureeye.123@gmail.com" />
+                  <ListComponent href={'#'} btnText="e-wastemart.123@gmail.com" />
                 </p>
                 <ul
                   className={`flex gap-3 dark:text-zinc-200 text-zinc-950`}
