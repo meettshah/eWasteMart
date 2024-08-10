@@ -110,7 +110,7 @@ const FormRecycler = () => {
           control={control}
           render={({ field }) => (
             <>
-              <input type="text" id="name" className="w-[400px]" {...field} />
+              <input type="text" id="name" className="" {...field} />
               {errors.name && (
                 <p className="text-red-500">{errors.name.message}</p>
               )}
@@ -150,7 +150,7 @@ const FormRecycler = () => {
             control={control}
             render={({ field }) => (
               <>
-                <input type="date" id="dob" className="w-[194px]" {...field} />
+                <input type="date" id="dob" className="" {...field} />
                 {errors.birthdate && (
                   <p className="text-red-500">{errors.birthdate.message}</p>
                 )}
@@ -169,7 +169,7 @@ const FormRecycler = () => {
               <input
                 type="text"
                 id="address"
-                className="w-[400px]"
+                className=""
                 {...field}
               />
               {errors.address && (
@@ -188,8 +188,9 @@ const FormRecycler = () => {
           render={({ field }) => (
             <>
               <textarea
+                lines="3"
                 id="description"
-                className="w-[400px] h-32"
+                className=""
                 {...field}
               />
               {errors.description && (
@@ -208,20 +209,20 @@ const FormRecycler = () => {
           className="flex gap-2"
         >
           {!!images?.length &&
-  images.map((link, index) => (
-    <div
-      key={link} // Assuming link is unique
-      className="bg-white border border-gray-300 shadow-md rounded-sm h-28"
-    >
-      <Image
-        className="image object-cover w-28 h-28"
-        width={100}
-        height={100}
-        src={link}
-        alt="product"
-      />
-    </div>
-  ))}
+            images.map((link, index) => (
+              <div
+                key={link} // Assuming link is unique
+                className="bg-white border border-gray-300 shadow-md rounded-sm h-28"
+              >
+                <Image
+                  className="image object-cover w-28 h-28"
+                  width={100}
+                  height={100}
+                  src={link}
+                  alt="product"
+                />
+              </div>
+            ))}
 
         </ReactSortable>
         {isUploading && (
@@ -257,46 +258,48 @@ const FormRecycler = () => {
         <div className="text-red-600">No images for this person!</div>
       )}
       <div className="my-4">
-        <h1>Properties</h1>
+        <div className="flex justify-between">
+        <h1>e-Waste Pricing</h1>
         <button
           type="button"
           onClick={addProperty}
-          className="btn-green text-sm"
+          className="bg-primary text-white font-semibold px-2 py-1 rounded-md text-sm"
         >
-          Add New Property
+          Add New Product
         </button>
+        </div>
         {properties.length > 0 &&
-  properties.map((property, index) => (
-    <div key={index} className="flex gap-1 mt-2">
-      <input
-        value={property.name}
-        onChange={(ev) => {
-          propertyNameChange(index, ev.target.value);
-        }}
-        className="m-0"
-        type="text"
-        placeholder="Property Name (example: color)"
-      />
-      <input
-        value={property.values}
-        onChange={(ev) => {
-          propertyValueChange(index, ev.target.value);
-        }}
-        className="m-0"
-        type="text"
-        placeholder="Values (comma separated)"
-      />
-      <button
-        onClick={() => {
-          removeProperty(index);
-        }}
-        type="button"
-        className="btn-red font-semibold"
-      >
-        Remove
-      </button>
-    </div>
-  ))}
+          properties.map((property, index) => (
+            <div key={index} className="flex gap-1 mt-2">
+              <input
+                value={property.name}
+                onChange={(ev) => {
+                  propertyNameChange(index, ev.target.value);
+                }}
+                className="m-0"
+                type="text"
+                placeholder="Product Name"
+              />
+              <input
+                value={property.values}
+                onChange={(ev) => {
+                  propertyValueChange(index, ev.target.value);
+                }}
+                className="m-0"
+                type="text"
+                placeholder="Price (in Rs.)"
+              />
+              <button
+                onClick={() => {
+                  removeProperty(index);
+                }}
+                type="button"
+                className="btn-red bg-danger px-4 rounded-lg border-none  font-semibold"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
 
 
       </div>
