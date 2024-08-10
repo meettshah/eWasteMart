@@ -29,6 +29,10 @@ export const siteConfig = {
         href: "/Records",
       },
       {
+        label: "Collaborators",
+        href: "/collaborators",
+      },
+      {
         label: "About Us",
         href: "/about-us",
       }
