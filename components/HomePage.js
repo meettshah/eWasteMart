@@ -118,9 +118,9 @@ const FrontPage = () => {
     <>
       {/* ... (previous sections remain unchanged) ... */}
     {/* What We Offer Section */}
-    <section className="py-20 px-4 bg-black text-white">
+    <section className="py-20 px-4 dark:bg-black bg-white text-white">
         <div className="container mx-auto flex flex-col  gap-1 justify-center items-center">
-          <h2 className="text-3xl font-bold text-center mb-12 text-white">Our Features</h2>
+          <h2 className="text-3xl font-bold text-center mb-12 dark:text-white text-black">Our Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard 
               title="Easy Connection" 
