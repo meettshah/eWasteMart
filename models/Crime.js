@@ -1,4 +1,4 @@
-const { Schema, models, model, default: mongoose } = require("mongoose");
+import mongoose, { Schema, models, model } from "mongoose";
 
 const CrimeScheme = new Schema({
     act: [{type: String, required: true}],
