@@ -13,7 +13,7 @@ const FrontPage = () => {
         <h1 className='text-[3rem] mb-8 text-black dark:text-white z-20 font-bold'>
           Welcome to the E-WasteMart
         </h1>
-        <p className='w-2/3 text-black dark:text-white text-center z-20'>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Praesentium, voluptas distinctio quasi autem maiores velit neque tempore! Laboriosam numquam deserunt laudantium voluptatem dolore. Laudantium nobis, quae repellendus laboriosam repudiandae distinctio!</p>
+        <p className='w-2/3 text-black dark:text-white text-center z-20'>Tired of electronic clutter? E-WasteMart is your eco-friendly solution. We offer a hassle-free platform to recycle your old gadgets and appliances. Not only are you helping to protect the environment, but you can also earn rewards for your contribution. Our secure and efficient process ensures responsible disposal of your e-waste while you enjoy peace of mind and potential financial benefits. Join us in building a greener future, one device at a time.</p>
       </div>
     </>
   )
