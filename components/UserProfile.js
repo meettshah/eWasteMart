@@ -76,7 +76,7 @@ const UserProfile = () => {
         )}
 
         <div className="mt-6">
-          <button className="bg-[rgb(103,232,67)] text-white px-4 py-2 rounded hover:bg-[rgb(103,232,67)] transition-colors">
+          <button className="bg-[rgb(103,232,67)] text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
             Edit Profile
           </button>
         </div>
