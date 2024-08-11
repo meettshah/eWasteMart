@@ -2,33 +2,30 @@
 import { Button } from '@nextui-org/react';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react'
 
 const LoginForm = () => {
     const { register, handleSubmit, setError, formState: { errors }, reset } = useForm();
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
     const onSubmit = async (data) => {
         try {
             setLoading(true);
-            // const usernameExists = await axios.get(`/api/check-username?username=${data.username}`);
-            // if (usernameExists.data.exists) {
-            //     setError('username', { type: 'manual', message: 'Username is already taken' });
-            //     return;
-            // }
-            
-            const res = await axios.post('/api/register', data);
-            
-            if(res.status === 201){
+            const res = signIn("credentials", {
+                email: data.email,
+                password: data.password,
+                redirect: false,
+            });
+
+            if(res.error){
+                setError("Invalid Credentials.");
                 setLoading(false);
-                reset();
+                return;
             }
-            else{
-                const errorData = res.data.message;
-                setError(errorData.message);
-                console.log("Something went wrong.");
-                setLoading(false);
-            }
+            
+            router.replace('/home')
         } catch (error) {
             setLoading(false);
             console.error("Form submission error:", error);
@@ -38,31 +35,6 @@ const LoginForm = () => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5'>
-            <div className='flex flex-col'>
-                <label htmlFor="username">Username</label>
-                <input
-                    {...register('username', { required: 'Username is required' })}
-                    type="text"
-                    id='username'
-                    name='username'
-                    className='w-[400px]'
-                />
-                {errors.username && <span className="text-red-500">{errors.username.message}</span>}
-            </div>
-
-            <div className='flex flex-col'>
-                <label htmlFor="role">Role</label>
-                <select
-                    {...register('role', { required: 'Role is required' })}
-                    className='w-[400px]'
-                >
-                    <option value="">Select</option>
-                    <option value="user">User</option>
-                    <option value="recycler">Recycler</option>
-                    <option value="corporate">Corporate</option>
-                </select>
-                {errors.role && <span className="text-red-500">{errors.role.message}</span>}
-            </div>
 
             <div className='flex flex-col'>
                 <label htmlFor="email">Email</label>
@@ -96,8 +68,8 @@ const LoginForm = () => {
 
             {errors.formError && <span className="text-red-500">{errors.formError.message}</span>}
 
-            <Button variant='solid' type='submit' color='primary' className='font-semibold w-32 mx-auto'>
-                Submit
+            <Button isLoading={loading} variant='solid' type='submit' color='primary' className='font-semibold w-32 mx-auto'>
+                Login
             </Button>
         </form>
     );

@@ -4,11 +4,10 @@ import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, Navba
 import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import { ThemeSwitch } from "./theme-switch";
-import { link as linkStyles } from "@nextui-org/theme";
-import clsx from "clsx";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import AuthModal from "./AuthModal";
+import { signOut } from "next-auth/react";
 
 export default function Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,11 +19,6 @@ export default function Nav() {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  const handleMenuClick = (href) => {
-    setIsDropdownOpen(false);
-    router.push(href);
   };
 
   return (
@@ -71,16 +65,21 @@ export default function Nav() {
                 {[
                   { label: "Profile", href: "/profile" },
                   { label: "Settings", href: "/settingtab" },
-                  { label: "Logout", href: "/logout" }
                 ].map((item, index) => (
-                  <a
-                    key={index}  // Ensure this key is unique
-                    onClick={() => handleMenuClick(item.href)}
-                    className="block px-4 py-2 dark:text-gray-100 text-gray-800 dark:hover:bg-[rgb(103,232,67)] hover:bg-gray-100 cursor-pointer"
+                  <Link
+                    key={index} 
+                    href ={item.href}
+                    className="block px-4 py-2 dark:text-white text-gray-800 dark:hover:bg-primary hover:bg-gray-100 cursor-pointer"
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 ))}
+                <button 
+                  className="px-4 py-2 mx-4 rounded-md text-white bg-primary cursor-pointer"
+                  onClick={() => signOut()}
+                >
+                  Logout
+                </button>
               </div>
             )}
           </div>
@@ -92,7 +91,7 @@ export default function Nav() {
       </NavbarContent>
       <NavbarMenu>
         {siteConfig.navMenuItems.map((item, index) => (
-          <NavbarMenuItem key={item.href}>  {/* Added key prop here */}
+          <NavbarMenuItem key={index}> 
             <NextLink
               color={
                 (index === 2) ? "primary" : (index === siteConfig.navMenuItems.length - 1) ? "primary" : "foreground"

@@ -14,19 +14,19 @@ const registerHandler = async (req) => {
 
     if (req.method === "POST") {
         try{
-        const { username, email, password, role } = await req.json();
+        const { name, email, password, role } = await req.json();
 
-        const exists = await User.findOne({ $or: [{ email }, { username }] });
+        const exists = await User.findOne({ email });
         console.log(exists);
         if (exists) {
             return NextResponse.json(
-                { message: "Email or username already exists. Please try again with different username or email." },
+                { message: "Email already exists. Please try again with different email." },
                 { status: 500 }
             );
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const data = await User.create({ username, email, role, password: hashedPassword });
+        const data = await User.create({ name, email, role, password: hashedPassword });
 
         return NextResponse.json({ message: "Successfully Registered !" },{status: 201});
     }catch(error){

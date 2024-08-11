@@ -6,7 +6,6 @@ const aiHandler = async (req) => {
     if (req.method === "POST") {
         const data = await req.json();
 
-        // console.log(data);
         const completion = await runPrompt(data.content);
 
         return NextResponse.json({ completion });

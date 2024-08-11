@@ -1,18 +1,16 @@
 import Footer1 from "@/components/Footer1";
 import FrontPage from "@/components/FrontPage";
-import Nav from "@/components/Nav";
 import Card from "@/components/Card"
+import LandingNavbar from "@/components/LandingNavbar";
 
 
 export default function Home() {
   return (
     <>
-      <Nav />
+      <LandingNavbar />
       <FrontPage />
       <Card/>
-      
       <Footer1 />
-
     </>
   );
 }

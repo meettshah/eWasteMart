@@ -62,7 +62,7 @@ const CollaboratorsPage = () => {
             </div>
             <div className="px-6 pt-4 pb-6 text-center">
               <button 
-                className="bg-[rgb(103,232,67)] hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+                className="bg-primary hover:bg-green-500 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
                 onClick={() => handleLearnMore(collaborator)}
               >
                 Learn More
@@ -83,7 +83,7 @@ const CollaboratorsPage = () => {
         <p className="mb-8 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           Are you a company with recycling facilities? Partner with E-WasteMart to make a positive impact on the environment.
         </p>
-        <button className="bg-[rgb(103,232,67)] hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+        <button className="bg-primary hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
           Become a Collaborator
         </button>
       </div>
