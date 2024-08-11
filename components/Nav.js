@@ -70,7 +70,7 @@ export default function Nav() {
               <div className="absolute right-0 mt-2 w-48 dark:bg-gray-900 bg-white shadow-lg rounded-md py-2 z-50">
                 {[
                   { label: "Profile", href: "/profile" },
-                  { label: "Settings", href: "/settings" },
+                  { label: "Settings", href: "/settingtab" },
                   { label: "Logout", href: "/logout" }
                 ].map((item, index) => (
                   <a
