@@ -5,7 +5,6 @@ import { mongooseConnect } from '@/lib/mongoose';
 const links = [];
 const uploadHandler = async (req) => {
   await mongooseConnect();
-  await isAdminRequest();
 
   const data = await req.formData();
   const files = data.get('file');
