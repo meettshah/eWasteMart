@@ -52,6 +52,8 @@ export default function Payment({existingName, existingEmail, existingAmount}) {
             razorpayOrderId: response.razorpay_order_id,
             razorpaySignature: response.razorpay_signature,
            };
+
+           console.log(data);
       
            const result = await fetch('/api/verify', {
             method: 'POST',
@@ -59,7 +61,9 @@ export default function Payment({existingName, existingEmail, existingAmount}) {
             headers: { 'Content-Type': 'application/json' },
            });
            const res = await result.json();
-           if (res.isOk) alert("payment succeed");
+           if (res.isOk) {
+            alert("payment succeed");
+           }
            else {
             alert(res.message);
            }
@@ -89,12 +93,12 @@ export default function Payment({existingName, existingEmail, existingAmount}) {
           id="razorpay-checkout-js"
           src="https://checkout.razorpay.com/v1/checkout.js"
          />
-         <section className="flex flex-col gap-6 h-14 mx-5 sm:mx-10 2xl:mx-auto 2xl:w-[1400px] items-center ">
+         <section className="flex">
           <form
-           className="flex flex-col gap-6 w-full sm:w-80"
+           className="flex flex-col"
            onSubmit={processPayment}
           >
-           <button className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800' type='submit'>Pay Now</button>
+           <button className='bg-primary py-2 px-4 font-semibold text-white rounded-md' type='submit'>Pay Now</button>
           </form>
          </section>
         </>
