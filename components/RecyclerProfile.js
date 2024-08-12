@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const mockRecyclerData = {
   name: "EcoRecycle Inc.",
   email: "info@ecorecycle.com",
-  avatar: "/api/placeholder/100/100",
+  avatar: "profile1.png",
   orders: [
     { id: 1, date: "2024-08-01", items: "Old Laptop", status: "Completed" },
     { id: 2, date: "2024-08-05", items: "Broken Smartphone", status: "Processing" },
