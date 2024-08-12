@@ -25,7 +25,7 @@ const Chatbot = () => {
         <div>
             {/* Chatbot Button */}
             <div
-                className="fixed bottom-4 right-4 bg-blue-500 text-white p-3 rounded-full shadow-lg cursor-pointer hover:bg-blue-600"
+                className="fixed bottom-4 right-4 dark:bg-gray-900 bg-gray-900 text-white p-3 rounded-full shadow-lg cursor-pointer hover:bg-green"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <svg
@@ -46,7 +46,7 @@ const Chatbot = () => {
 
             {/* Chatbox */}
             {isOpen && (
-                <div className="fixed bottom-16 z-40 right-4 w-80 bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
+                <div className="fixed bottom-16 z-40 right-4 w-80 dark:bg-gray-900 bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
                     <div className="flex-grow h-64 overflow-y-scroll p-3 border-b border-gray-300">
                         {messages.map((message, index) => (
                             <div
@@ -71,7 +71,7 @@ const Chatbot = () => {
                         />
                         <button
                             onClick={handleSendMessage}
-                            className="ml-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
+                            className="ml-2 bg-rgb(40, 109, 21) text-white p-2 rounded-lg hover:bg-blue-600"
                         >
                             Send
                         </button>
