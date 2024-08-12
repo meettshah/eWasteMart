@@ -94,7 +94,7 @@ const HomePage = () => {
           <div className="bg-white dark:bg-black p-6 rounded-lg shadow-md">
             <h3 className="text-xl text-black dark:text-white font-semibold mb-2">Buy Refurbished Items</h3>
             <p className="text-black dark:text-white mb-4">Find great deals on refurbished electronics</p>
-            <Link href="/recyclers" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            <Link href="/collaborators" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
               Shop Now
             </Link>
           </div>
