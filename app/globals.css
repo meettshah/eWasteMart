@@ -2,14 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-input{
-  @apply border-2 dark:border-1 py-1 px-2 border-primary outline-none rounded-md;
+input {
+  @apply border-2 dark:border-gray-700 py-1 px-2 border-primary outline-none rounded-md;
 }
 
-select{
-  @apply border-2 dark:border-1 py-1 px-2 border-primary outline-none rounded-md;
+select {
+  @apply border-2 dark:border-gray-700 py-1 px-2 border-primary outline-none rounded-md;
 }
 
-textarea{
-  @apply border-2 dark:border-1 py-1 px-2 border-primary outline-none rounded-md;
+textarea {
+  @apply border-2 dark:border-gray-700 py-1 px-2 border-primary outline-none rounded-md;
 }
