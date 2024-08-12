@@ -101,14 +101,14 @@ const FormScrapper = () => {
                 className='flex flex-col'
                 {...field}
               >
-                <option value="t1">Select</option>
-                <option value="t2">Computers and Peripherals</option>
-                <option value="t3">Mobile and Personal Devices</option>
-                <option value="t4">Televisions and Displays</option>
-                <option value="t5">Audio and Video Equipment</option>
-                <option value="t6">Networking and Communication Devices</option>
-                <option value="t6">Batteries and Chargers</option>
-                <option value="t7">Other</option>
+                <option value="select">Select</option>
+                <option value="computers">Computers and Peripherals</option>
+                <option value="mobile">Mobile and Personal Devices</option>
+                <option value="television">Televisions and Displays</option>
+                <option value="audio">Audio and Video Equipment</option>
+                <option value="networking">Networking and Communication Devices</option>
+                <option value="batteries">Batteries and Chargers</option>
+                <option value="other">Other</option>
               </select>
               {errors.gender && <p className='text-red-500'>{errors.gender.message}</p>}
             </>
