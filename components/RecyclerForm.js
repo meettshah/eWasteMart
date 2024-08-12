@@ -78,11 +78,11 @@ const RecyclerForm = () => {
     const onSubmit = async (data) => {
 
         setLoading(true);
-        setForm(...form, ...data, properties);
+        setForm({...form, ...data, properties});
 
         console.log("Forms Data : ", form)
 
-        const res = await axios.post('/api/recycler', data);
+        const res = await axios.post('/api/recycler', form);
 
         console.log('Response:', data);
 

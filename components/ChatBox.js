@@ -23,7 +23,6 @@ const Chatbot = () => {
 
     return (
         <div>
-            {/* Chatbot Button */}
             <div
                 className="fixed bottom-4 right-4 dark:bg-gray-900 bg-gray-900 text-white p-3 rounded-full shadow-lg cursor-pointer hover:bg-green"
                 onClick={() => setIsOpen(!isOpen)}

@@ -1,5 +1,6 @@
 import { mongooseConnect } from "@/lib/mongoose";
 import Recycler from "@/models/RecyclerModel";
+import { NextResponse } from "next/server";
 
 const recyclerHandler = async (req) => {
     await mongooseConnect();
@@ -26,16 +27,15 @@ const recyclerHandler = async (req) => {
 
     let {_id, name, email, typeWaste, address, images, properties} = await req.json();
     
-    if(method === 'POST' && body.title && body.price ){
-        const RecyclerDoc = await Recycler.create({name, birthdate, address, typeWaste, images, properties, email});
-        return NextResponse.json(RecyclerDoc);
+    if(method === 'POST' && name && email ){
+        const RecyclerDoc = await Recycler.create({name, email, typeWaste, address, images, properties});
+        return NextResponse.json({message: "Recycler Successfully Created", RecyclerDoc});
     }
 
 
-    if(method === 'PUT' && body.title && body.price ){
-        const RecyclerDoc = await Recycler.updateOne({_id}, {name, address, typeWaste, images, properties, email})
-
-        return NextResponse.json(RecyclerDoc);
+    if(method === 'PUT' && name && email ){
+        const RecyclerDoc = await Recycler.updateOne({_id}, {name, email, typeWaste, address, images, properties});
+        return NextResponse.json({message: "Recycler Successfully Updated", RecyclerDoc});
     }
 
 }
