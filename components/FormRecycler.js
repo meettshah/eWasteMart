@@ -28,6 +28,7 @@ const FormRecycler = () => {
     setValue,
     watch,
     formState: { errors },
+    reset
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -36,6 +37,7 @@ const FormRecycler = () => {
       address: "",
       gender: "",
       images: [],
+      properties: properties,
     },
   });
 
@@ -93,8 +95,8 @@ const FormRecycler = () => {
 
   const onSubmit = async (data) => {
     try {
-      await axios.post("/api/criminals", data);
-      // Optionally reset form or handle success
+      await axios.post("/api/recycler", data);
+      reset();
       console.log("Form data submitted:", data);
     } catch (error) {
       console.error("Submit failed:", error);
@@ -126,7 +128,7 @@ const FormRecycler = () => {
           render={({ field }) => (
             <>
               <select id="types of waste" className="flex flex-col" {...field}>
-                <option value="t1">Select</option>
+                <option value="">Select</option>
                 <option value="t2">Computers and Peripherals</option>
                 <option value="t3">Mobile and Personal Devices</option>
                 <option value="t4">Televisions and Displays</option>

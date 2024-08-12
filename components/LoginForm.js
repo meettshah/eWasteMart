@@ -25,7 +25,7 @@ const LoginForm = () => {
                 return;
             }
             
-            router.replace('/home')
+            router.replace('/home');
         } catch (error) {
             setLoading(false);
             console.error("Form submission error:", error);

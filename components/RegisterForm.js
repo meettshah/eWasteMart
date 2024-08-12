@@ -39,7 +39,7 @@ const RegisterForm = () => {
             <div className='flex flex-col'>
                 <label htmlFor="name">Full Name</label>
                 <input
-                    {...register('name', { required: 'Username is required' })}
+                    {...register('name', { required: 'Name is required' })}
                     type="text"
                     id='name'
                     name='name'

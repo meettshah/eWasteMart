@@ -5,6 +5,7 @@ import { ThemeSwitch } from "./theme-switch";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import Payment from "./Payment";
 
 export default function LandingNavbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,6 +33,7 @@ export default function LandingNavbar() {
             </NavbarContent>
 
             <NavbarContent justify="end">
+                <Payment existingName={"KANISHK"} existingEmail={"kanishkchaudhary2005@gmail.com"} existingAmount={200} />
                 <ThemeSwitch />
                 <Link className="bg-primary text-white px-4 py-2 rounded-md font-semibold hover:bg-success" href="/login">Login</Link>
                 <Link className="bg-primary text-white px-4 py-2 rounded-md font-semibold hover:bg-success" href="/register">Register</Link>

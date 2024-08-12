@@ -1,6 +1,6 @@
 import mongoose, { Schema, model, models } from "mongoose"
 
-const UserSchema = new Schema({
+const LoginSchema = new Schema({
     name: {
         type: String,
         required: [true, "Must provide a name."],
@@ -25,6 +25,6 @@ const UserSchema = new Schema({
 }
 );
 
-const User = models.User || model('User', UserSchema);
+const Login = models.Login || model('Login', LoginSchema);
 
-export default User;
+export default Login;

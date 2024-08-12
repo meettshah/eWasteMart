@@ -31,8 +31,9 @@ export default function App() {
   return (
     <DivWrapper title={'Our Cards'}>
       <div className="flex justify-center h-[400px] gap-8">
-        {cardData.map((card) => (
+        {cardData.map((card,index) => (
           <Card
+            key={index}
             isFooterBlurred
             radius="lg"
             className="border-none h-[400px]"

@@ -1,4 +1,4 @@
-import User from "@/models/User";
+import Login from "@/models/LoginModel";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt"
 
@@ -16,7 +16,7 @@ const registerHandler = async (req) => {
         try{
         const { name, email, password, role } = await req.json();
 
-        const exists = await User.findOne({ email });
+        const exists = await Login.findOne({ email });
         console.log(exists);
         if (exists) {
             return NextResponse.json(
@@ -26,7 +26,7 @@ const registerHandler = async (req) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const data = await User.create({ name, email, role, password: hashedPassword });
+        const data = await Login.create({ name, email, role, password: hashedPassword });
 
         return NextResponse.json({ message: "Successfully Registered !" },{status: 201});
     }catch(error){

@@ -6,11 +6,12 @@ import HomePage from "@/components/HomePage";
 
 
 export default function Home() {
+  
+
   return (
     <>
       <LandingNavbar />
       <FrontPage />
-      <Card/>
       <HomePage/>
       <Footer1 />
     </>

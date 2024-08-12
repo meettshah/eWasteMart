@@ -1,5 +1,5 @@
 import { mongooseConnect } from "@/lib/mongoose";
-import User from "@/models/User";
+import Login from "@/models/LoginModel";
 import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from 'bcrypt';
@@ -8,15 +8,18 @@ const login = async (credentials) => {
     try{
         await mongooseConnect();
 
-        const user = await User.findOne({email: credentials.email});
+        console.log("Finding user with email : ", credentials.email);
+        const user = await Login.findOne({email: credentials.email});
         if(!user) throw new Error("Wrong Credentials.");
+        console.log("User found : ", user);
 
         const isCorrect = await bcrypt.compare(credentials.password, user.password);
         if(!isCorrect) throw new Error("Wrong Credentials.");
+        console.log("Password is correct.");
 
         return user;
     } catch (error){
-        console.log("Error while logging in.");
+        console.log("Error while logging in.", error);
         throw new Error("Something went wrong.");
     }
 
