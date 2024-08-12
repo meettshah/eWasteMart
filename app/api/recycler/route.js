@@ -7,9 +7,10 @@ const recyclerHandler = async (req) => {
     
     if(method === "GET"){
         const {searchParams} = new URL(req.url);
-        const id = searchParams.get('id');
-        if(id){
-            return NextResponse.json(await Recycler.findOne({_id: id}))
+        const email = searchParams.get('email');
+        if(email){
+            console.log("Email Found ", email);
+            return NextResponse.json(await Recycler.findOne({email: email}));
         }
         return NextResponse.json(await Recycler.find());
     }
@@ -23,15 +24,16 @@ const recyclerHandler = async (req) => {
         }
     }
 
-    let body = await req.json();
+    let {_id, name, email, typeWaste, address, images, properties} = await req.json();
     
     if(method === 'POST' && body.title && body.price ){
-        const RecyclerDoc = await Recycler.create({});
+        const RecyclerDoc = await Recycler.create({name, birthdate, address, typeWaste, images, properties, email});
         return NextResponse.json(RecyclerDoc);
     }
 
+
     if(method === 'PUT' && body.title && body.price ){
-        const RecyclerDoc = await Recycler.updateOne({_id: body._id},{title: body.title, description: body.desc, price: body.price, images: body.images, category: body.category, properties: body.properties})
+        const RecyclerDoc = await Recycler.updateOne({_id}, {name, address, typeWaste, images, properties, email})
 
         return NextResponse.json(RecyclerDoc);
     }

@@ -9,16 +9,18 @@ import { ReactSortable } from "react-sortablejs";
 import Spinner from "./Spinner";
 import axios from "axios";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 const schema = yup.object().shape({
   name: yup.string().required("Full Name is required"),
   birthdate: yup.date().required("Date of Birth is required"),
   address: yup.string().required("Address is required"),
-  gender: yup.string().required("Gender is required"),
+  typeWaste: yup.string().required("Gender is required"),
   images: yup.array().min(1, "At least one image is required"),
 });
 
 const FormRecycler = () => {
+  const { data: session } = useSession();
   const [isUploading, setIsUploading] = useState(false);
   const [properties, setProperties] = useState([]);
 
@@ -33,9 +35,9 @@ const FormRecycler = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       name: "",
-      birthdate: "",
+      email: session?.user?.email,
       address: "",
-      gender: "",
+      typeWaste: "",
       images: [],
       properties: properties,
     },
@@ -94,6 +96,7 @@ const FormRecycler = () => {
   };
 
   const onSubmit = async (data) => {
+    console.log("Submitting form data:", data);
     try {
       await axios.post("/api/recycler", data);
       reset();
@@ -123,43 +126,26 @@ const FormRecycler = () => {
       <div className="flex flex-col">
         <label htmlFor="types of waste">Select types of waste</label>
         <Controller
-          name="gendergsg"
+          name="typeWaste"
           control={control}
           render={({ field }) => (
             <>
-              <select id="types of waste" className="flex flex-col" {...field}>
+              <select id="typesWaste" className="flex flex-col" {...field}>
                 <option value="">Select</option>
-                <option value="t2">Computers and Peripherals</option>
-                <option value="t3">Mobile and Personal Devices</option>
-                <option value="t4">Televisions and Displays</option>
-                <option value="t5">Audio and Video Equipment</option>
-                <option value="t6">Networking and Communication Devices</option>
-                <option value="t6">Batteries and Chargers</option>
-                <option value="t7">Other</option>
+                <option value="computers">Computers and Peripherals</option>
+                <option value="mobile">Mobile and Personal Devices</option>
+                <option value="televisions">Televisions and Displays</option>
+                <option value="audio">Audio and Video Equipment</option>
+                <option value="networking">Networking and Communication Devices</option>
+                <option value="batteries">Batteries and Chargers</option>
+                <option value="other">Other</option>
               </select>
-              {errors.gender && (
-                <p className="text-red-500">{errors.gender.message}</p>
+              {errors.typeWaste && (
+                <p className="text-red-500">{errors.typeWaste.message}</p>
               )}
             </>
           )}
         />
-      </div>
-      <div className="flex gap-3">
-        <div className="flex flex-col">
-          <label htmlFor="dob">Date of Birth</label>
-          <Controller
-            name="birthdate"
-            control={control}
-            render={({ field }) => (
-              <>
-                <input type="date" id="dob" className="" {...field} />
-                {errors.birthdate && (
-                  <p className="text-red-500">{errors.birthdate.message}</p>
-                )}
-              </>
-            )}
-          />
-        </div>
       </div>
       <div className="flex flex-col">
         <label htmlFor="address">Address</label>

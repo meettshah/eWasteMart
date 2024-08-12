@@ -5,19 +5,19 @@ const together = new Together({
     apiKey: process.env.TOGETHER_API_KEY,
 });
 
-const fineTuneModel = async () => {
-    const response = await together.ai.finetune.create({
-        model: "meta-llama/Meta-Llama-3-8B-Instruct-Turbo",
-        dataset: JSON.stringify(), // Assuming myDataset is a JavaScript object or array
-        epochs: 3,
-        learningRate: 1e-5,
-        batchSize: 8
-    });
+// const fineTuneModel = async () => {
+//     const response = await together.ai.finetune.create({
+//         model: "meta-llama/Meta-Llama-3-8B-Instruct-Turbo",
+//         dataset: JSON.stringify(), // Assuming myDataset is a JavaScript object or array
+//         epochs: 3,
+//         learningRate: 1e-5,
+//         batchSize: 8
+//     });
 
-    console.log("Fine-tuning complete:", response);
-};
+//     console.log("Fine-tuning complete:", response);
+// };
 
-fineTuneModel();
+// fineTuneModel();
 
 
 const systemPrompt = `
@@ -76,10 +76,6 @@ const runPrompt = async (content) => {
         model: "meta-llama/Meta-Llama-3-8B-Instruct-Turbo",
         messages: [{ role: 'system', content: systemPrompt }, { role: "user", content: content }],
     });
-
-    // for await (const chunk of stream) {
-    //     process.stdout.write(chunk.choices[0]?.delta?.content || '');
-    // }
 
     if (response.choices && response.choices.length > 0) {
         return response.choices[0].message.content;

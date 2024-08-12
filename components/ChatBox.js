@@ -1,4 +1,5 @@
 "use client"
+import axios from 'axios';
 import React, { useState } from 'react';
 
 const Chatbot = () => {
@@ -6,14 +7,15 @@ const Chatbot = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (input.trim() === '') return;
 
         const userMessage = { text: input, sender: 'user' };
         setMessages([...messages, userMessage]);
 
-        // Simulate bot response (replace with actual AI backend later)
-        const botMessage = { text: 'This is a response from the bot.', sender: 'bot' };
+        const res = await axios.post('/api/openai', { content: input });
+
+        const botMessage = { text: res.data.completion, sender: 'bot' };
         setMessages([...messages, userMessage, botMessage]);
 
         setInput('');

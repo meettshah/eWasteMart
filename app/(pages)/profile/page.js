@@ -1,21 +1,82 @@
+// "use client";
+// import ProfileFooter from '@/components/ProfileFooter';
+// import ProfileHeader from '@/components/ProfileHeader';
+// import RecyclerProfile from '@/components/RecyclerProfile';
+// import UserProfile from '@/components/UserProfile';
+// import React, { useEffect, useState } from 'react'
+// import { useUser } from '@/context/UserContext';
+// import { useSession } from 'next-auth/react';
+// import FormRecycler from '@/components/FormRecycler';
+
+// const page = () => {
+//   const { data: session } = useSession();
+//   const [userSession, setUserSession] = useState(session);
+//   const { user, loading, error, fetchUserById } = useUser();
+
+//   console.log("User : ", session);
+
+//   console.log("User : ", userSession);
+
+//     // useEffect(() => {
+//     //     if (!user) {
+//     //         fetchUserById(Session);
+//     //     }
+//     //     console.log("User : ", Session);
+//     // }, [Session]);
+
+//     // if (loading) return <p>Loading...</p>;
+//     // if (error) return <p>Error: {error}</p>;
+  
+//   return (
+//     <div>
+//       <ProfileHeader/>
+//       {/* {(Session.user.role === "user") && <UserProfile/>}
+//       {(Session.user.role === "recycler") && <RecyclerProfile/>}
+//       {(Session.user.role === "recycler") && <FormRecycler />} */}
+//       <ProfileFooter/>
+//     </div>
+//   )
+// }
+
+// export default page
+
+
 "use client";
 import ProfileFooter from '@/components/ProfileFooter';
 import ProfileHeader from '@/components/ProfileHeader';
 import RecyclerProfile from '@/components/RecyclerProfile';
 import UserProfile from '@/components/UserProfile';
-import React from 'react'
+import React, { useEffect, useState } from 'react';
+import { useUser } from '@/context/UserContext';
+import { useSession } from 'next-auth/react';
+import FormRecycler from '@/components/FormRecycler';
 
-const page = () => {
-  
-  
+const Page = () => {
+  const { data: session } = useSession();
+  const { user, loading, error, fetchUserById } = useUser();
+
+  // Accessing the user's email from the session object
+  const userEmail = session?.user?.email;
+  console.log("User Email:", userEmail);
+
+  // useEffect(() => {
+  //   if (session && !user) {
+  //     fetchUserById(session?.user?.email); // Assuming fetchUserById requires the user's ID
+  //   }
+  // }, [session]);
+
+  // if (loading) return <p>Loading...</p>;
+  // if (error) return <p>Error: {error}</p>;
+
   return (
     <div>
-      <ProfileHeader/>
-      <UserProfile/>
-      <RecyclerProfile/>
-      <ProfileFooter/>
+      <ProfileHeader />
+      {session?.user?.role === "user" && <UserProfile />}
+      {session?.user?.role === "recycler" && <RecyclerProfile />}
+      {session?.user?.role === "recycler" && <FormRecycler />}
+      <ProfileFooter />
     </div>
-  )
+  );
 }
 
-export default page
+export default Page;

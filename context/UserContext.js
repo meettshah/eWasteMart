@@ -12,10 +12,10 @@ export const UserProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const fetchUserById = async (id) => {
+    const fetchUserById = async (email) => {
         try {
             setLoading(true);
-            const response = await axios.get(`/api//${id}`);
+            const response = await axios.get(`/api/recycler?email=${email}`);
             setUser(response.data);
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred');

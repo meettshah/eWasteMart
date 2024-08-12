@@ -16,15 +16,11 @@ const RecyclerSchema = new Schema({
     type: String,
     required: true,
   },
-  birthdate: {
-    type: Date,
-    required: true,
-  },
-  address: {
+  typeWaste: {
     type: String,
     required: true,
   },
-  gender: {
+  address: {
     type: String,
     required: true,
   },
