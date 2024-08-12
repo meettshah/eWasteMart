@@ -28,8 +28,8 @@ E-WasteMart is an e-commerce platform dedicated to the responsible management of
 
 For any inquiries, assistance, or support, please reach out to us:
 
-- **Email**: [support@ewastemart.com](mailto:support@ewastemart.com)
-- **Phone**: +1 (800) 123-4567
+- **Email**: [support@ewastemart.com](kanishkchudhary2005@gmail.com)
+- **Phone**: 7016525208
 
 Our support team is here to help with any questions or issues you may have.
 
