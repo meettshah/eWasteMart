@@ -28,7 +28,7 @@ const ProfileHeader = ({ username }) => {
           </div>
           <div>
             <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">
-              You've helped recycle
+              You&quot;ve helped recycle
             </p>
             <p className="text-3xl font-bold text-green-600 dark:text-green-400">
               {recycledItems} items

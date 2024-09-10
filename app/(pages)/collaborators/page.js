@@ -9,4 +9,4 @@ const Collab = () => {
   )
 }
 
-export default Collab
+export default CollaboratorsPage

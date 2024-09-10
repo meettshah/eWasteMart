@@ -98,7 +98,7 @@ export default function Payment({existingName, existingEmail, existingAmount}) {
            className="flex flex-col"
            onSubmit={processPayment}
           >
-           <button className='bg-primary py-2 px-4 font-semibold text-white rounded-md' type='submit'>Pay Now</button>
+           <button className='bg-primary py-2 px-4 font-semibold text-white rounded-md' type='submit'>Donate Us</button>
           </form>
          </section>
         </>

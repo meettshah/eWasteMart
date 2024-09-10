@@ -30,9 +30,9 @@ const HomePage = () => {
               <h3 className="mt-1 text-2xl font-semibold text-black dark:text-white">Revolutionizing E-Waste Management</h3>
               <p className="mt-2 text-black dark:text-white">
                 E-WasteMart is your one-stop solution for responsible electronics recycling and refurbishment. 
-                We're on a mission to reduce e-waste, promote sustainable practices, and create a circular economy 
-                for electronics. Whether you're looking to sell your old devices, buy refurbished products, or 
-                learn about eco-friendly disposal methods, we've got you covered.
+                We&quot;re on a mission to reduce e-waste, promote sustainable practices, and create a circular economy 
+                for electronics. Whether you&quot;re looking to sell your old devices, buy refurbished products, or 
+                learn about eco-friendly disposal methods, we&quot;ve got you covered.
               </p>
               <div className="mt-4 flex space-x-4">
                 <Link href="/about" className="inline-block bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition duration-300">
