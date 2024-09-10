@@ -73,7 +73,7 @@ const Recyclers = () => {
             Recyclers
           </h2>
           <p className="font-light text-gray-500 lg:mb-16 sm:text-xl dark:text-gray-400">
-            Explore the world&quot;s best recyclers and start recycling today.
+            Explore the world&lsquo;s best recyclers and start recycling today.
           </p>
         </div>
         <div className="grid gap-8 mb-6 lg:mb-16 md:grid-cols-2">

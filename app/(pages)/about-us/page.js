@@ -50,7 +50,7 @@ const links = [
             Ready to make a difference? Join our team and push the boundaries.
             Passionate and talented? We offer a collaborative environment for your growth.
             Work with us and shape the future. Explore your potential, together.
-            Be part of something bigger. Let&quot;s build something amazing, side-by-side.
+            Be part of something bigger. Let&lsquo;s build something amazing, side-by-side.
             </p>
           </div>
           <div className="mx-auto mt-10 max-w-2xl lg:mx-0 lg:max-w-none">
