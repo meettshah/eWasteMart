@@ -10,7 +10,7 @@ import RecyclerForm from '@/components/RecyclerForm';
 
 const Page = () => {
   const { data: session } = useSession();
-  const { user, loading, error, fetchUserById } = useUser();
+  // const { user, loading, error, fetchUserById } = useUser();
 
   // Accessing the user's email from the session object
   const userEmail = session?.user?.email;
