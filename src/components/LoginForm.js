@@ -6,26 +6,27 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react'
 
 const LoginForm = () => {
-    const { register, handleSubmit, setError, formState: { errors }, reset } = useForm();
+    const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     const onSubmit = async (data) => {
         try {
             setLoading(true);
-            const res = signIn("credentials", {
+            const res = await signIn("credentials", {
                 email: data.email,
                 password: data.password,
                 redirect: false,
             });
 
             if(res.error){
-                setError("Invalid Credentials.");
+                setError('formError', { type: 'manual', message: 'Invalid email or password.' });
                 setLoading(false);
                 return;
             }
             
             router.push('/home');
+            router.refresh();
         } catch (error) {
             setLoading(false);
             console.error("Form submission error:", error);
@@ -46,7 +47,7 @@ const LoginForm = () => {
                     type="email"
                     id='email'
                     name='email'
-                    className='w-[400px]'
+                    className='w-full'
                 />
                 {errors.email && <span className="text-red-500">{errors.email.message}</span>}
             </div>
@@ -61,14 +62,14 @@ const LoginForm = () => {
                     type="password"
                     id='password'
                     name='password'
-                    className='w-[400px]'
+                    className='w-full'
                 />
                 {errors.password && <span className="text-red-500">{errors.password.message}</span>}
             </div>
 
             {errors.formError && <span className="text-red-500">{errors.formError.message}</span>}
 
-            <Button isLoading={loading} variant='solid' type='submit' color='primary' className='font-semibold w-32 mx-auto'>
+            <Button isLoading={loading} variant='solid' type='submit' color='primary' className='font-semibold w-full'>
                 Login
             </Button>
         </form>

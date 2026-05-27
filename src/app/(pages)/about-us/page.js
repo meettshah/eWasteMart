@@ -1,79 +1,80 @@
-"use client";
+import Link from "next/link";
+import { BadgeCheck, Leaf, LockKeyhole, Recycle } from "lucide-react";
 
-const links = [
-    { name: 'Open roles', href: '#' },
-    { name: 'Internship program', href: '#' },
-    { name: 'Our values', href: '#' },
-    { name: 'Meet our leadership', href: '#' },
-  ]
-  const stats = [
-    { name: 'Offices worldwide', value: '2' },
-    { name: 'Full-time colleagues', value: '6+' },
-    { name: 'Hours per week', value: '40' },
-    { name: 'Paid time off', value: 'Unlimited' },
-  ]
-  
-  export default function About() {
-    return (
-        <>
-       
-      <div className="relative isolate bg-[url('/back3.jpg')] bg-fixed overflow-hidden bg-gray-900 py-24 sm:py-32">
-        
-        <div
-          className="hidden sm:absolute sm:-top-10 sm:right-1/2 sm:-z-10 sm:mr-10 sm:block sm:transform-gpu sm:blur-3xl"
-          aria-hidden="true"
-        >
-          <div
-            className="aspect-[1097/845] w-[68.5625rem] bg-fixed top-0 bg-gradient-to-tr from-[#ff4694] to-[#776fff] opacity-20"
-            style={{
-              clipPath:
-                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-            }}
-          />
-        </div>
-        <div
-          className="absolute -top-52 left-1/2 -z-10 -translate-x-1/2 transform-gpu blur-3xl sm:top-[-28rem] sm:ml-16 sm:translate-x-0 sm:transform-gpu"
-          aria-hidden="true"
-        >
-          <div
-            className="aspect-[1097/845] w-[68.5625rem] bg-gradient-to-tr from-[#ff4694] to-[#776fff] opacity-20"
-            style={{
-              clipPath:
-                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-            }}
-          />
-        </div>
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:mx-0">
-            <h2 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">Work with us</h2>
-            <p className="mt-6 text-lg leading-8 text-gray-300">
-            Ready to make a difference? Join our team and push the boundaries.
-            Passionate and talented? We offer a collaborative environment for your growth.
-            Work with us and shape the future. Explore your potential, together.
-            Be part of something bigger. Let&lsquo;s build something amazing, side-by-side.
+const principles = [
+  {
+    icon: Recycle,
+    title: "Circular economy first",
+    text: "Every listing is designed to move electronics toward reuse, refurbishment or compliant recycling.",
+  },
+  {
+    icon: LockKeyhole,
+    title: "Data-aware disposal",
+    text: "Sellers can document condition and handling needs before recyclers commit to pickup.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Transparent approvals",
+    text: "Bids are visible to the seller, and one approved buyer owns the lot at the accepted price.",
+  },
+  {
+    icon: Leaf,
+    title: "Lower landfill impact",
+    text: "The marketplace helps organizations divert electronics from informal disposal channels.",
+  },
+];
+
+export default function About() {
+  return (
+    <main className="min-h-screen bg-white px-6 py-12 text-gray-950 dark:bg-gray-950 dark:text-white">
+      <div className="mx-auto max-w-7xl">
+        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-primary">About E-WasteMart</p>
+            <h1 className="mt-4 text-4xl font-bold leading-tight sm:text-5xl">
+              A clearer way to move e-waste from sellers to responsible buyers.
+            </h1>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-gray-600 dark:text-gray-300">
+              E-WasteMart connects individual sellers, bulk sellers, certified recyclers and enterprises through a transparent bidding workflow. The platform keeps roles simple, actions protected and e-waste movement easy to understand.
             </p>
-          </div>
-          <div className="mx-auto mt-10 max-w-2xl lg:mx-0 lg:max-w-none">
-            <div className="grid grid-cols-1 gap-x-8 gap-y-6 text-base font-semibold leading-7 text-white sm:grid-cols-2 md:flex lg:gap-x-10">
-              {links.map((link) => (
-                <a key={link.name} href={link.href}>
-                  {link.name} <span aria-hidden="true">&rarr;</span>
-                </a>
-              ))}
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/marketplace" className="rounded-md bg-primary px-5 py-3 text-center font-semibold text-white">
+                Open marketplace
+              </Link>
+              <Link href="/register" className="rounded-md border border-gray-300 px-5 py-3 text-center font-semibold dark:border-gray-700">
+                Join E-WasteMart
+              </Link>
             </div>
-            <dl className="mt-16 grid grid-cols-1 gap-8 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4">
-              {stats.map((stat) => (
-                <div key={stat.name} className="flex flex-col-reverse">
-                  <dt className="text-base leading-7 text-gray-300">{stat.name}</dt>
-                  <dd className="text-2xl font-bold leading-9 tracking-tight text-white">{stat.value}</dd>
-                </div>
-              ))}
+          </div>
+          <div className="rounded-lg bg-gray-50 p-6 dark:bg-gray-900">
+            <h2 className="text-xl font-semibold">Who uses the platform?</h2>
+            <dl className="mt-5 space-y-4 text-sm">
+              <div>
+                <dt className="font-semibold">Users and bulk sellers</dt>
+                <dd className="mt-1 text-gray-600 dark:text-gray-300">Create e-waste lots and approve the bid that works best.</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Recyclers</dt>
+                <dd className="mt-1 text-gray-600 dark:text-gray-300">Bid on lots that match their facility capabilities and pickup scope.</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Enterprises</dt>
+                <dd className="mt-1 text-gray-600 dark:text-gray-300">Participate in listings and run brand-oriented recovery programmes.</dd>
+              </div>
             </dl>
           </div>
-        </div>
+        </section>
+
+        <section className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {principles.map((item) => (
+            <div key={item.title} className="rounded-lg border border-gray-200 p-5 dark:border-gray-800">
+              <item.icon className="h-7 w-7 text-primary" />
+              <h2 className="mt-4 font-semibold">{item.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{item.text}</p>
+            </div>
+          ))}
+        </section>
       </div>
-     
-      </>
-    )
-  }
-  
+    </main>
+  );
+}

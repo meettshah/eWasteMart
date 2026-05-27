@@ -8,18 +8,19 @@ const login = async (credentials) => {
     try{
         await mongooseConnect();
 
-        console.log("Finding user with email : ", credentials.email);
-        const user = await Login.findOne({email: credentials.email});
+        const user = await Login.findOne({email: credentials.email?.toLowerCase().trim()});
         if(!user) throw new Error("Wrong Credentials.");
-        console.log("User found : ", user);
 
         const isCorrect = await bcrypt.compare(credentials.password, user.password);
         if(!isCorrect) throw new Error("Wrong Credentials.");
-        console.log("Password is correct.");
 
-        return user;
+        return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        };
     } catch (error){
-        console.log("Error while logging in.", error);
         throw new Error("Something went wrong.");
     }
 
@@ -36,7 +37,6 @@ export const authOptions = {
             async authorize(credentials){
                 try{
                     const user = await login(credentials);
-                    console.log({credentials});
                     return user;
                 }
                 catch(error){
@@ -53,7 +53,6 @@ export const authOptions = {
                 token.role = user.role;
                 token.id = user.id;
             }
-            console.log("Token : ", token);
 
             return token;
         },
@@ -66,10 +65,13 @@ export const authOptions = {
                 session.user.id = token.id;
             }
 
-            console.log('Session : ', session);
             return session;
         }
-    }
+    },
+    session: {
+        strategy: "jwt",
+    },
+    secret: process.env.NEXTAUTH_SECRET,
 }
 
 const authHandler = NextAuth(authOptions);

@@ -1,115 +1,101 @@
 "use client";
-import React from 'react';
-import Link from 'next/link';
 
-const HomePage = () => {
-  return (
-    <div className="min-h-screen dark:bg-black bg-white">
-     
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { ArrowRight, Building2, Factory, ListPlus, Recycle, Scale, UserRound } from "lucide-react";
 
-      <main className="container mx-auto mt-8 p-4">
-        <section className="text-center mb-12">
-          <h2 className="text-4xl font-bold dark:bg-black bg-white mb-4">Welcome to E-WasteMart</h2>
-          <p className="text-xl text-gray-600">Your one-stop shop for responsible e-waste management</p>
-        </section>
-        <div>
-        <div className="min-h-screen dark:bg-black bg-white">
-     
-      
-      <main className="container mx-auto mt-12 p-4 w-[1000px] ml-12">
-    
-
-      
-        <section className="dark:bg-gray-900 bg-white h-64 rounded-xl shadow-2xl mb-2 overflow-hidden">
-          <div className="md:flex">
-            <div className="md:flex-shrink-0">
-              <img className="h-64 w-full object-cover md:w-48" src="/card_img_02.jpg" alt="E-waste recycling" />
-            </div>
-            <div className="p-8">
-              <div className="uppercase tracking-wide text-sm text-green-500 font-semibold"></div>
-              <h3 className="mt-1 text-2xl font-semibold text-black dark:text-white">Revolutionizing E-Waste Management</h3>
-              <p className="mt-2 text-black dark:text-white">
-                E-WasteMart is your one-stop solution for responsible electronics recycling and refurbishment. 
-                We&quot;re on a mission to reduce e-waste, promote sustainable practices, and create a circular economy 
-                for electronics. Whether you&quot;re looking to sell your old devices, buy refurbished products, or 
-                learn about eco-friendly disposal methods, we&quot;ve got you covered.
-              </p>
-              <div className="mt-4 flex space-x-4">
-                <Link href="/about" className="inline-block bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition duration-300">
-                  Learn More
-                </Link>
-                <Link href="/recyclers" className="inline-block border border-green-500 text-green-500 px-4 py-2 rounded-full hover:bg-green-50 transition duration-300">
-                  Our Services
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-       
-      </main>
-      <main className="container mx-auto mt-12 p-4  w-[1000px] animate mr-12">
-    
-
-      
-        <section className="dark:bg-gray-900 bg-white h-64 rounded-xl shadow-2xl mb-2 overflow-hidden">
-          <div className="md:flex">
-          
-            <div className="p-8">
-              <div className="uppercase tracking-wide text-sm text-green-500 font-semibold"></div>
-              <h3 className="mt-1 text-2xl font-semibold text-black dark:text-white">Empowering a Greener Future</h3>
-              <p className="mt-2 text-black dark:text-white">
-              At E-WasteMart, we believe that every device has the potential to contribute to a sustainable future. By giving new life to old electronics, we empower individuals and businesses to make environmentally conscious decisions. Join us in our commitment to reducing waste, conserving resources, and fostering a cleaner, greener planet for generations to come.
-              </p>
-              <div className="mt-4 flex space-x-4">
-                <Link href="/about" className="inline-block bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition duration-300">
-                  Learn More
-                </Link>
-                <Link href="/recyclers" className="inline-block border border-green-500 text-green-500 px-4 py-2 rounded-full hover:bg-green-50 transition duration-300">
-                  Our Services
-                </Link>
-              </div>
-            </div>
-            <div className="md:flex-shrink-0">
-              <img className="h-64 w-full object-cover md:w-48" src="/card_img_04.jpg" alt="E-waste recycling" />
-            </div>
-          </div>
-        </section>
-
-       
-      </main>
-      
-      
-    </div>
-        </div>
-
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white dark:bg-black p-6 rounded-lg shadow-md">
-            <h3 className="text-xl text-black dark:text-white font-semibold mb-2">Sell Your E-Waste</h3>
-            <p className="text-black dark:text-white mb-4">Get paid for your old electronics</p>
-            <Link href="/recyclers" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-              Start Selling
-            </Link>
-          </div>
-          <div className="bg-white dark:bg-black p-6 rounded-lg shadow-md">
-            <h3 className="text-xl text-black dark:text-white font-semibold mb-2">Buy Refurbished Items</h3>
-            <p className="text-black dark:text-white mb-4">Find great deals on refurbished electronics</p>
-            <Link href="/collaborators" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-              Shop Now
-            </Link>
-          </div>
-          <div className="bg-white dark:bg-black p-6 rounded-lg shadow-md">
-            <h3 className="text-xl text-black dark:text-white font-semibold mb-2">Recycle Responsibly</h3>
-            <p className="text-black dark:text-white mb-4">Learn about our eco-friendly recycling process</p>
-            <Link href="/about-us" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-              Learn More
-            </Link>
-          </div>
-        </section>
-      </main>
-
-    </div>
-  );
+const roleGuidance = {
+  user: {
+    title: "Sell individual e-waste",
+    body: "Create listings for phones, laptops, chargers and other household electronics.",
+    action: "Create a listing",
+  },
+  bulk_seller: {
+    title: "Move bulk lots faster",
+    body: "Publish larger office, school, warehouse or industrial e-waste lots for competitive bids.",
+    action: "List a bulk lot",
+  },
+  recycler: {
+    title: "Find lots ready for recycling",
+    body: "Browse open listings, place bids and win approved lots from sellers.",
+    action: "Browse listings",
+  },
+  enterprise: {
+    title: "Run a recycling programme",
+    body: "List programme collections or bid on lots aligned with your brand recovery process.",
+    action: "Open marketplace",
+  },
 };
 
-export default HomePage;
+const quickActions = [
+  { title: "Marketplace", text: "Create listings, place bids and approve buyers.", href: "/marketplace", icon: Scale },
+  { title: "Certified recyclers", text: "Review recycler capabilities and processing policies.", href: "/recyclers", icon: Factory },
+  { title: "Enterprise partners", text: "Explore brand-led take-back and recycling programmes.", href: "/collaborators", icon: Building2 },
+];
+
+export default function HomePage() {
+  const { data: session } = useSession();
+  const role = session?.user?.role || "user";
+  const guidance = roleGuidance[role] || roleGuidance.user;
+
+  return (
+    <main className="min-h-screen bg-gray-50 px-6 py-8 dark:bg-gray-950">
+      <div className="mx-auto max-w-7xl space-y-8">
+        <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900 md:p-8">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-primary">Dashboard</p>
+              <h1 className="mt-3 text-4xl font-bold text-gray-950 dark:text-white">
+                Welcome back, {session?.user?.name || "E-WasteMart member"}.
+              </h1>
+              <p className="mt-4 max-w-2xl text-gray-600 dark:text-gray-300">
+                Your role controls what you can do across the platform. Use this dashboard to jump into the right workflow.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Link href="/marketplace" className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 font-semibold text-white">
+                  {guidance.action} <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/profile" className="inline-flex items-center justify-center rounded-md border border-gray-300 px-5 py-3 font-semibold text-gray-900 dark:border-gray-700 dark:text-white">
+                  View profile
+                </Link>
+              </div>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-950">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  {role === "recycler" ? <Recycle /> : role === "enterprise" ? <Building2 /> : <UserRound />}
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-950 dark:text-white">{guidance.title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{guidance.body}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-5 md:grid-cols-3">
+          {quickActions.map((action) => (
+            <Link key={action.href} href={action.href} className="rounded-lg bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900">
+              <action.icon className="h-7 w-7 text-primary" />
+              <h2 className="mt-5 text-xl font-semibold text-gray-950 dark:text-white">{action.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{action.text}</p>
+            </Link>
+          ))}
+        </section>
+
+        <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
+          <div className="flex items-start gap-4">
+            <ListPlus className="mt-1 h-6 w-6 text-primary" />
+            <div>
+              <h2 className="text-xl font-semibold text-gray-950 dark:text-white">Platform structure</h2>
+              <p className="mt-2 text-gray-600 dark:text-gray-300">
+                Sellers create listings, recyclers and enterprises submit bids, and the listing owner approves one buyer. Everything important happens in the marketplace.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

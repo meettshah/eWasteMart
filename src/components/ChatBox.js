@@ -13,10 +13,15 @@ const Chatbot = () => {
         const userMessage = { text: input, sender: 'user' };
         setMessages([...messages, userMessage]);
 
-        const res = await axios.post('/api/openai', { content: input });
+        try {
+            const res = await axios.post('/api/openai', { content: input });
 
-        const botMessage = { text: res.data.completion, sender: 'bot' };
-        setMessages([...messages, userMessage, botMessage]);
+            const botMessage = { text: res.data.completion, sender: 'bot' };
+            setMessages([...messages, userMessage, botMessage]);
+        } catch (error) {
+            const botMessage = { text: error.response?.data?.message || 'Support assistant is unavailable right now.', sender: 'bot' };
+            setMessages([...messages, userMessage, botMessage]);
+        }
 
         setInput('');
     };
@@ -24,7 +29,7 @@ const Chatbot = () => {
     return (
         <div>
             <div
-                className="fixed bottom-4 right-4 dark:bg-gray-900 bg-gray-900 text-white p-3 rounded-full shadow-lg cursor-pointer hover:bg-green"
+                className="fixed bottom-4 right-4 z-50 dark:bg-gray-900 bg-gray-900 text-white p-3 rounded-full shadow-lg cursor-pointer hover:bg-primary"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <svg
@@ -65,12 +70,12 @@ const Chatbot = () => {
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Type your message..."
+                            placeholder="Ask about e-waste..."
                             className="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
                             onClick={handleSendMessage}
-                            className="ml-2 bg-rgb(40, 109, 21) text-white p-2 rounded-lg hover:bg-blue-600"
+                            className="ml-2 bg-primary text-white px-3 py-2 rounded-lg hover:bg-green-700"
                         >
                             Send
                         </button>

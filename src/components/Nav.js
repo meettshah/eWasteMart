@@ -1,44 +1,56 @@
 "use client";
-import React, { useState } from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link, Button } from "@shadcn/ui";
-import { siteConfig } from "@/config/site";
-import NextLink from "next/link";
-import { ThemeSwitch } from "./theme-switch";
-import { usePathname, useRouter } from "next/navigation";
+
 import Image from "next/image";
-import AuthModal from "./AuthModal";
-import { signOut } from "next-auth/react";
+import NextLink from "next/link";
+import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
+import {
+  Avatar,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
+} from "@nextui-org/react";
+import { siteConfig } from "@/config/site";
+import { ThemeSwitch } from "./theme-switch";
+
+const roleLabels = {
+  user: "Individual seller",
+  bulk_seller: "Bulk seller",
+  recycler: "Recycler",
+  enterprise: "Enterprise",
+};
 
 export default function Nav() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const pathname = usePathname();
-
-  const profileImageUrl = "/profile1.png";
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
+  const { data: session } = useSession();
+  const user = session?.user;
 
   return (
-    <Navbar maxWidth="xl" position="sticky" onMenuOpenChange={setIsMenuOpen}>
+    <Navbar maxWidth="xl" position="sticky" isBlurred className="border-b border-gray-200/70 dark:border-gray-800">
       <NavbarContent justify="start">
         <NavbarBrand>
-          <Image
-            src={'/logo.png'}
-            width={36}
-            height={36}
-            className="h-8 w-8 mr-4"
-            alt="logo"
-          />
-          <p className="font-bold text-inherit">E-WasteMart</p>
+          <NextLink href="/home" className="flex items-center gap-3">
+            <Image src="/logo.png" width={36} height={36} className="h-9 w-9" alt="E-WasteMart logo" />
+            <span className="font-bold text-gray-950 dark:text-white">E-WasteMart</span>
+          </NextLink>
         </NavbarBrand>
       </NavbarContent>
-      <NavbarContent className="hidden sm:flex gap-4" justify="center">
-        {siteConfig.navItems.map((item, index) => (
-          <NavbarItem key={item.href} isActive={(pathname === item.href) ? 1 : 0}>
+
+      <NavbarContent className="hidden gap-5 lg:flex" justify="center">
+        {siteConfig.navItems.map((item) => (
+          <NavbarItem key={item.href} isActive={pathname === item.href}>
             <NextLink
-              className={` ${(pathname === item.href) ? 'text-primary' : 'text-black dark:text-white font-semibold '}`}
+              className={`text-sm font-medium ${
+                pathname === item.href ? "text-primary" : "text-gray-700 hover:text-primary dark:text-gray-200"
+              }`}
               href={item.href}
             >
               {item.label}
@@ -49,63 +61,35 @@ export default function Nav() {
 
       <NavbarContent justify="end">
         <ThemeSwitch />
-        <NavbarItem className="hidden sm:flex relative">
-          <div className="relative">
-            <Image
-              src={profileImageUrl}
-              width={38}
-              height={38}
-              className="rounded-full ml-4 cursor-pointer"
-              alt="Profile"
-              onClick={toggleDropdown}
-            />
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 dark:bg-gray-900 bg-white shadow-lg rounded-md py-2 z-50">
-                {[
-                  { label: "Profile", href: "/profile" },
-                  { label: "Settings", href: "/settingtab" },
-                ].map((item, index) => (
-                  <Link
-                    key={index} 
-                    href ={item.href}
-                    className="block px-4 py-2 dark:text-white text-gray-800 dark:hover:bg-primary hover:bg-gray-100 cursor-pointer"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                <button 
-                  className="px-4 py-2 mx-4 rounded-md text-white bg-primary cursor-pointer"
-                  onClick={() => signOut()}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </NavbarItem>
-        <NavbarMenuToggle
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          className="sm:hidden"
-        />
+        <Dropdown placement="bottom-end">
+          <DropdownTrigger>
+            <button className="flex items-center gap-3 rounded-md px-2 py-1 text-left hover:bg-gray-100 dark:hover:bg-gray-900">
+              <Avatar size="sm" src="/profile1.png" name={user?.name || "User"} />
+              <span className="hidden sm:block">
+                <span className="block text-sm font-semibold text-gray-950 dark:text-white">{user?.name || "Account"}</span>
+                <span className="block text-xs text-gray-500">{roleLabels[user?.role] || "Member"}</span>
+              </span>
+            </button>
+          </DropdownTrigger>
+          <DropdownMenu aria-label="Account menu">
+            <DropdownItem key="profile" href="/profile">Profile</DropdownItem>
+            <DropdownItem key="settings" href="/settingtab">Settings</DropdownItem>
+            <DropdownItem key="logout" color="danger" onPress={() => signOut({ callbackUrl: "/" })}>
+              Logout
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+        <NavbarMenuToggle className="lg:hidden" />
       </NavbarContent>
+
       <NavbarMenu>
-        {siteConfig.navMenuItems.map((item, index) => (
-          <NavbarMenuItem key={index}> 
-            <NextLink
-              color={
-                (index === 2) ? "primary" : (index === siteConfig.navMenuItems.length - 1) ? "primary" : "foreground"
-              }
-              className={`w-full ${(pathname === item.href) ? "text-primary font-semibold" : ""}`}
-              href={item.href}
-              size="lg"
-            >
+        {siteConfig.navMenuItems.map((item) => (
+          <NavbarMenuItem key={item.href}>
+            <NextLink className={pathname === item.href ? "font-semibold text-primary" : "text-gray-800 dark:text-gray-100"} href={item.href}>
               {item.label}
             </NextLink>
           </NavbarMenuItem>
         ))}
-        <NavbarMenuItem key="auth-modal"> {/* Added key prop here */}
-          <AuthModal />
-        </NavbarMenuItem>
       </NavbarMenu>
     </Navbar>
   );

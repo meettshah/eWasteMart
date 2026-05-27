@@ -1,48 +1,51 @@
 "use client";
-import React, { useState } from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem } from "@nextui-org/react";
-import { ThemeSwitch } from "./theme-switch";
-import { usePathname } from "next/navigation";
+
 import Image from "next/image";
 import Link from "next/link";
-import Payment from "./Payment";
+import { usePathname } from "next/navigation";
+import { Button, Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/react";
+import { ThemeSwitch } from "./theme-switch";
+
+const publicLinks = [
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Roles", href: "#roles" },
+  { label: "Partners", href: "/collaborators" },
+  { label: "About", href: "/about-us" },
+];
 
 export default function LandingNavbar() {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const pathname = usePathname();
+  const pathname = usePathname();
 
+  return (
+    <Navbar maxWidth="xl" position="sticky" isBlurred className="border-b border-gray-200/70 dark:border-gray-800">
+      <NavbarContent justify="start">
+        <NavbarBrand>
+          <Link className="flex items-center gap-3" href="/">
+            <Image src="/logo.png" width={36} height={36} className="h-9 w-9" alt="E-WasteMart logo" />
+            <span className="font-bold text-gray-950 dark:text-white">E-WasteMart</span>
+          </Link>
+        </NavbarBrand>
+      </NavbarContent>
 
-    return (
-        <Navbar maxWidth="xl" position="sticky" isBlurred={false} onMenuOpenChange={setIsMenuOpen}>
-            <NavbarContent justify="start">
-                <NavbarBrand>
-                    <Link className="flex justify-center items-center" href="/">
-                        <Image
-                            src={'/logo.png'}
-                            width={36}
-                            height={36}
-                            className="h-8 w-8 mr-4"
-                            alt="logo"
-                        />
-                        <p className="font-bold text-inherit">E-WasteMart</p>
-                    </Link>
-                </NavbarBrand>
-            </NavbarContent>
-            <NavbarContent className="hidden sm:flex gap-4" justify="center">
+      <NavbarContent className="hidden gap-5 md:flex" justify="center">
+        {publicLinks.map((item) => (
+          <NavbarItem key={item.href} isActive={pathname === item.href}>
+            <Link className="text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-200" href={item.href}>
+              {item.label}
+            </Link>
+          </NavbarItem>
+        ))}
+      </NavbarContent>
 
-            </NavbarContent>
-
-            <NavbarContent justify="end">
-                <Payment existingName={"KANISHK"} existingEmail={"kanishkchaudhary2005@gmail.com"} existingAmount={200} />
-                <ThemeSwitch />
-                <Link className="bg-primary text-white px-4 py-2 rounded-md font-semibold hover:bg-success" href="/login">Login</Link>
-                <Link className="bg-primary text-white px-4 py-2 rounded-md font-semibold hover:bg-success" href="/register">Register</Link>
-            </NavbarContent>
-            <NavbarMenu>
-
-                <NavbarMenuItem key="auth-modal">
-                </NavbarMenuItem>
-            </NavbarMenu>
-        </Navbar>
-    );
+      <NavbarContent justify="end">
+        <ThemeSwitch />
+        <Button as={Link} href="/login" variant="flat" color="primary" className="font-semibold">
+          Login
+        </Button>
+        <Button as={Link} href="/register" color="primary" className="hidden font-semibold sm:inline-flex">
+          Create account
+        </Button>
+      </NavbarContent>
+    </Navbar>
+  );
 }

@@ -12,9 +12,19 @@ const propertySchema = new Schema({
 });
 
 const RecyclerSchema = new Schema({
+  ownerId: {
+    type: Schema.Types.ObjectId,
+    ref: "Login",
+  },
   name: {
     type: String,
     required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    lowercase: true,
+    trim: true,
   },
   typeWaste: {
     type: String,
@@ -32,15 +42,15 @@ const RecyclerSchema = new Schema({
   ],
   description: {
     type: String,
-    required: true,
+    default: "",
   },
   properties: {
     type: [propertySchema],
     required: true,
   },
-});
+}, { timestamps: true });
 
 
-const Recycler = models.Login || model('Recycler', RecyclerSchema);
+const Recycler = models.Recycler || model('Recycler', RecyclerSchema);
 
 export default Recycler;

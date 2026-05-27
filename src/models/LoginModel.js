@@ -16,7 +16,7 @@ const LoginSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ["user", "recycler", "corporate"],
+        enum: ["user", "bulk_seller", "recycler", "enterprise"],
         default: "user",
     },
 },

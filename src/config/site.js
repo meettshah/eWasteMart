@@ -1,47 +1,20 @@
 export const siteConfig = {
-  name: "Next.js + NextUI",
-  description: "Make beautiful websites regardless of your design experience.",
+  name: "E-WasteMart",
+  description: "Role based e-waste marketplace for sellers, recyclers and enterprise recycling programmes.",
   navItems: [
-    {
-      label: "Home",
-      href: "/home",
-    },
-    {
-      label: "Recyclers",
-      href: "/recyclers",
-    },
-    {
-      label: "Collaborators",
-      href: "/collaborators",
-    },
-    {
-      label: "About Us",
-      href: "/about-us",
-    },
+    { label: "Dashboard", href: "/home" },
+    { label: "Marketplace", href: "/marketplace" },
+    { label: "Recyclers", href: "/recyclers" },
+    { label: "Partners", href: "/collaborators" },
+    { label: "About", href: "/about-us" },
   ],
   navMenuItems: [
-    {
-        label: "Home",
-        href: "/home",
-      },
-      {
-        label: "Records",
-        href: "/Records",
-      },
-      {
-        label: "Collaborators",
-        href: "/collaborators",
-      },
-      {
-        label: "About Us",
-        href: "/about-us",
-      }
+    { label: "Dashboard", href: "/home" },
+    { label: "Marketplace", href: "/marketplace" },
+    { label: "Recyclers", href: "/recyclers" },
+    { label: "Partners", href: "/collaborators" },
+    { label: "About", href: "/about-us" },
+    { label: "Profile", href: "/profile" },
+    { label: "Settings", href: "/settingtab" },
   ],
-  links: {
-    github: "https://github.com/nextui-org/nextui",
-    twitter: "https://twitter.com/getnextui",
-    docs: "https://nextui.org",
-    discord: "https://discord.gg/9b6yyZKmH4",
-    sponsor: "https://patreon.com/jrgarciadev",
-  },
 };

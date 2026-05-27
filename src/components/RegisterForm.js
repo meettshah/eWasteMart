@@ -21,16 +21,10 @@ const RegisterForm = () => {
                 reset();
                 router.push('/login')
             }
-            else{
-                const errorData = res.data.message;
-                setError(errorData.message);
-                console.log("Something went wrong.");
-                setLoading(false);
-            }
         } catch (error) {
             setLoading(false);
             console.error("Form submission error:", error);
-            setError('formError', { type: 'manual', message: 'Submission failed, please try again later.' });
+            setError('formError', { type: 'manual', message: error.response?.data?.message || 'Registration failed, please try again.' });
         }
     };
 
@@ -43,7 +37,7 @@ const RegisterForm = () => {
                     type="text"
                     id='name'
                     name='name'
-                    className='w-[400px]'
+                    className='w-full'
                 />
                 {errors.name && <span className="text-red-500">{errors.name.message}</span>}
             </div>
@@ -52,12 +46,13 @@ const RegisterForm = () => {
                 <label htmlFor="role">Role</label>
                 <select
                     {...register('role', { required: 'Role is required' })}
-                    className='w-[400px]'
+                    className='w-full'
                 >
                     <option value="">Select</option>
-                    <option value="user">User</option>
-                    <option value="recycler">Recycler</option>
-                    <option value="corporate">Corporate</option>
+                    <option value="user">User - individual seller</option>
+                    <option value="bulk_seller">Bulk Seller - organization or industry</option>
+                    <option value="recycler">Recycler - recycling agency or industry</option>
+                    <option value="enterprise">Enterprise - brand recycle programme</option>
                 </select>
                 {errors.role && <span className="text-red-500">{errors.role.message}</span>}
             </div>
@@ -72,7 +67,7 @@ const RegisterForm = () => {
                     type="email"
                     id='email'
                     name='email'
-                    className='w-[400px]'
+                    className='w-full'
                 />
                 {errors.email && <span className="text-red-500">{errors.email.message}</span>}
             </div>
@@ -87,14 +82,14 @@ const RegisterForm = () => {
                     type="password"
                     id='password'
                     name='password'
-                    className='w-[400px]'
+                    className='w-full'
                 />
                 {errors.password && <span className="text-red-500">{errors.password.message}</span>}
             </div>
 
             {errors.formError && <span className="text-red-500">{errors.formError.message}</span>}
 
-            <Button isLoading={loading} variant='solid' type='submit' color='primary' className='font-semibold w-32 mx-auto'>
+            <Button isLoading={loading} variant='solid' type='submit' color='primary' className='font-semibold w-full'>
                 Register
             </Button>
         </form>

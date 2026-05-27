@@ -1,12 +1,5 @@
-import CollaboratorsPage from '@/components/Collaborators'
-import React from 'react'
+import CollaboratorsPage from "@/components/Collaborators";
 
-const Collab = () => {
-  return (
-    <div>
-      <CollaboratorsPage/>
-    </div>
-  )
+export default function PartnersPage() {
+  return <CollaboratorsPage />;
 }
-
-export default Collab
