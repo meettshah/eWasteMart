@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link, Button } from "@nextui-org/react";
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link, Button } from "@shadcn/ui";
 import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import { ThemeSwitch } from "./theme-switch";
@@ -13,7 +13,6 @@ export default function Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
 
   const profileImageUrl = "/profile1.png";
 
@@ -22,7 +21,7 @@ export default function Nav() {
   };
 
   return (
-    <Navbar maxWidth="xl" position="sticky" isBlurred={false} onMenuOpenChange={setIsMenuOpen}>
+    <Navbar maxWidth="xl" position="sticky" onMenuOpenChange={setIsMenuOpen}>
       <NavbarContent justify="start">
         <NavbarBrand>
           <Image

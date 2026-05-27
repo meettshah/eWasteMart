@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure, Checkbox, Input, Link } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure, Checkbox, Input, Link } from "@shadcn/ui";
 // import { signIn, signOut } from "next-auth/react";
 // import { useSession } from "next-auth/react";
 import { useRouter } from 'next/navigation'

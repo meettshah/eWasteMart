@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardFooter, Image, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
+import { Card, CardFooter, Image, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@shadcn/ui";
 import DivWrapper from "./DivWrapper";
 import Chips from './Chips';
 import { SSG_FALLBACK_EXPORT_ERROR } from "next/dist/lib/constants";
@@ -170,11 +170,8 @@ const FrontPage = () => {
                 <p className="text-tiny text-white/80">{card.description}</p>
                 <Button
                   className="text-tiny text-white bg-black/20"
-                  variant="flat"
-                  color="default"
-                  radius="lg"
-                  size="sm"
-                  onPress={() => handleReadMore(card)}
+                  variant="outline"
+                  onClick={() => handleReadMore(card)}
                 >
                   Read More
                 </Button>
