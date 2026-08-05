@@ -4,6 +4,11 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@nextui-org/react";
+import PaytmCheckout from "@/components/PaytmCheckout";
+import PickupScheduler from "@/components/PickupScheduler";
+import PickupCard from "@/components/PickupCard";
+import { useSearchParams, useRouter } from "next/navigation";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 const SELLER_ROLES = ["user", "bulk_seller", "enterprise"];
 const BIDDER_ROLES = ["recycler", "enterprise"];
@@ -59,6 +64,23 @@ export default function Marketplace() {
       setLoading(false);
     }
   };
+
+  // Read Paytm callback query param and show banner
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    if (payment === "success") {
+      setMessage("✓ Payment confirmed! You can now schedule a pickup.");
+      router.replace("/marketplace"); // clean URL
+    } else if (payment === "failed") {
+      setMessage("Payment was not completed. Please try again.");
+      router.replace("/marketplace");
+    } else if (payment === "tampered") {
+      setMessage("Payment verification failed. Please contact support.");
+      router.replace("/marketplace");
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     loadListings();
@@ -276,6 +298,48 @@ export default function Marketplace() {
                         Sold to {approvedBid.bidderName} for Rs. {Number(approvedBid.amount).toLocaleString("en-IN")}.
                       </div>
                     )}
+
+                    {/* ─── Payment & Pickup flow ─────────────────────────────── */}
+                    {listing.status === "sold" && (() => {
+                      const isApprovedBuyer =
+                        approvedBid?.bidderEmail === session?.user?.email;
+
+                      // Approved buyer sees Pay Now if unpaid
+                      if (isApprovedBuyer && listing.paymentStatus === "unpaid") {
+                        return (
+                          <PaytmCheckout
+                            listing={listing}
+                            bidId={approvedBid._id}
+                            amount={approvedBid.amount}
+                            onSuccess={loadListings}
+                            onFailure={loadListings}
+                          />
+                        );
+                      }
+
+                      // Approved buyer sees Schedule Pickup if paid but no pickup yet
+                      if (isApprovedBuyer && listing.paymentStatus === "paid" && !listing.pickupId) {
+                        return (
+                          <PickupScheduler listing={listing} onScheduled={loadListings} />
+                        );
+                      }
+
+                      // Both seller and buyer see PickupCard if pickup exists
+                      if (listing.pickupId && (isOwner || isApprovedBuyer)) {
+                        return <PickupCard pickupId={listing.pickupId} onUpdate={loadListings} />;
+                      }
+
+                      // Seller sees payment status notice
+                      if (isOwner && listing.paymentStatus === "unpaid") {
+                        return (
+                          <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+                            Waiting for the buyer to complete payment before pickup can be scheduled.
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })()}
 
                     {listing.status === "open" && canBid && !isOwner && (
                       <div className="mt-5 grid gap-3 rounded-md border p-4 dark:border-gray-800 md:grid-cols-[160px_1fr_auto]">

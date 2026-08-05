@@ -18,5 +18,6 @@ export const config = {
     "/about-us",
     "/collaborators",
     "/recyclers",
+    "/pickups",
   ],
 };

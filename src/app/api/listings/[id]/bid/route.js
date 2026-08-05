@@ -16,7 +16,8 @@ export async function POST(req, { params }) {
   }
 
   await mongooseConnect();
-  const listing = await Listing.findById(params.id);
+  const { id } = await params;
+  const listing = await Listing.findById(id);
   if (!listing) return NextResponse.json({ message: "Listing not found." }, { status: 404 });
   if (listing.status !== "open") return NextResponse.json({ message: "This listing is already sold." }, { status: 400 });
   if (listing.sellerEmail === session.user.email) {
