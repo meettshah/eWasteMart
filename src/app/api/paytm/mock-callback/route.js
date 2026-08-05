@@ -27,6 +27,21 @@ export async function POST(req) {
       await listing.save();
     }
 
+    try {
+      const { dispatchNotification } = await import("@/lib/notifications");
+      await dispatchNotification({
+        userId: order.payeeId,
+        userEmail: order.payeeEmail,
+        title: "Payment Received",
+        message: `You have received a payment of Rs. ${order.amount.toLocaleString("en-IN")} from ${order.payerName}. The buyer will now schedule a pickup.`,
+        type: "PAYMENT",
+        link: `/orders/${order._id}`,
+        channels: ["IN_APP", "EMAIL"]
+      });
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
+
     return NextResponse.json({ success: true, message: "Mock payment successful" });
   } catch (error) {
     return NextResponse.json({ message: "Server error" }, { status: 500 });

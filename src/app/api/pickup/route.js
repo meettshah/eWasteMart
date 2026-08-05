@@ -73,8 +73,21 @@ export async function POST(req) {
   listing.pickupId = pickup._id;
   await listing.save();
 
-  console.log(`[Pickup] Scheduled pickup ${pickup._id} for listing ${listingId}. Notify seller: ${pickup.sellerEmail}`);
-  
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications");
+    await dispatchNotification({
+      userId: pickup.sellerId,
+      userEmail: pickup.sellerEmail,
+      title: "Pickup Scheduled",
+      message: `${pickup.recyclerName} has scheduled a pickup for "${listing.title}" on ${reqDate.toLocaleDateString()} at ${scheduledTimeSlot}.`,
+      type: "PICKUP",
+      link: `/pickups`,
+      channels: ["IN_APP", "EMAIL"]
+    });
+  } catch (err) {
+    console.error("Notification error:", err);
+  }
+
   return NextResponse.json({ message: "Pickup scheduled", pickupId: pickup._id });
 }
 
@@ -87,7 +100,30 @@ export async function GET(req) {
   
   const pickups = await Pickup.find({
     $or: [{ sellerEmail: email }, { recyclerEmail: email }]
-  }).sort({ createdAt: -1 });
+  }).sort({ createdAt: -1 }).lean();
 
-  return NextResponse.json(pickups);
+  const unscheduledListings = await Listing.find({
+    paymentStatus: "paid",
+    $or: [{ pickupId: null }, { pickupId: { $exists: false } }]
+  }).lean();
+
+  const relevantListings = unscheduledListings.filter(l => {
+    const isSeller = l.sellerEmail === email;
+    const approvedBid = l.bids.find(b => b.status === "approved");
+    const isBuyer = approvedBid?.bidderEmail === email;
+    return isSeller || isBuyer;
+  });
+
+  const pseudoPickups = relevantListings.map(l => ({
+    _id: `needs_scheduling_${l._id}`,
+    isPseudo: true,
+    listingId: l._id,
+    listingTitle: l.title,
+    status: "needs_scheduling",
+    scheduledDate: new Date(), 
+    scheduledTimeSlot: "Not scheduled yet",
+    listing: l
+  }));
+
+  return NextResponse.json([...pseudoPickups, ...pickups]);
 }

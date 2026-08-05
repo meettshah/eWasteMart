@@ -44,5 +44,20 @@ export async function POST(req, { params }) {
     }
   }
 
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications");
+    await dispatchNotification({
+      userId: pickup.sellerId,
+      userEmail: pickup.sellerEmail,
+      title: "Pickup Completed",
+      message: `${pickup.recyclerName} has successfully completed the pickup for "${pickup.listingTitle}". The payment will be transferred to your account shortly.`,
+      type: "PICKUP",
+      link: `/pickups`,
+      channels: ["IN_APP", "EMAIL"]
+    });
+  } catch (err) {
+    console.error("Notification error:", err);
+  }
+
   return NextResponse.json({ message: "Completed", status: "completed" });
 }

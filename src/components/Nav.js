@@ -14,6 +14,7 @@ import {
 } from "@nextui-org/react";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "./theme-switch";
+import NotificationBell from "./NotificationBell";
 
 const roleLabels = {
   user: "Individual seller",
@@ -54,6 +55,7 @@ export default function Nav() {
 
         <div className="flex items-center gap-4 justify-end">
           <ThemeSwitch />
+          <NotificationBell />
           
           <div className="relative">
             <button 

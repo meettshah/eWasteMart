@@ -142,6 +142,34 @@ export default function Marketplace() {
     }
   };
 
+  const sendCounterOffer = async (listingId, bidId, amount) => {
+    setSaving(true);
+    setMessage("");
+    try {
+      await axios.post(`/api/listings/${listingId}/bid/${bidId}/counter`, { amount: Number(amount) });
+      setMessage("Counter offer sent successfully.");
+      await loadListings();
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Could not send counter offer.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const respondCounterOffer = async (listingId, bidId, action) => {
+    setSaving(true);
+    setMessage("");
+    try {
+      await axios.post(`/api/listings/${listingId}/bid/${bidId}/counter`, { action });
+      setMessage(`Counter offer ${action}ed.`);
+      await loadListings();
+    } catch (error) {
+      setMessage(error.response?.data?.message || `Could not ${action} counter offer.`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 dark:bg-gray-950">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -267,15 +295,18 @@ export default function Marketplace() {
                 const isOwner = listing.sellerEmail === session?.user?.email;
                 const bidForm = bidForms[listing._id] || { amount: "", message: "" };
                 const approvedBid = listing.bids?.find((bid) => bid.status === "approved");
+                const isParticipant = (session?.user?.email === listing.sellerEmail) || (approvedBid?.bidderEmail === session?.user?.email);
+                const isSoldOut = listing.paymentStatus === "paid";
+                const isCompletelySoldOut = isSoldOut && !isParticipant;
 
                 return (
-                  <article key={listing._id} className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
+                  <article key={listing._id} className={`rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900 ${isCompletelySoldOut ? 'opacity-60 grayscale-[0.5] pointer-events-none' : ''}`}>
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="text-2xl font-semibold text-gray-950 dark:text-white">{listing.title}</h2>
-                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${listing.status === "open" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
-                            {listing.status}
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isSoldOut ? 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300' : listing.status === "open" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
+                            {isSoldOut ? 'SOLD OUT' : listing.status}
                           </span>
                         </div>
                         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -364,7 +395,11 @@ export default function Marketplace() {
                     <div className="mt-5">
                       <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Bids</h3>
                       <div className="mt-3 space-y-3">
-                        {listing.bids?.length ? listing.bids.map((bid) => (
+                        {listing.bids?.length ? listing.bids.map((bid) => {
+                          const isBidder = session?.user?.email === bid.bidderEmail;
+                          const hasPendingCounter = bid.counterOffer?.status === "pending";
+                          
+                          return (
                           <div key={bid._id} className="flex flex-col gap-3 rounded-md border p-4 dark:border-gray-800 md:flex-row md:items-center md:justify-between">
                             <div>
                               <div className="font-semibold text-gray-950 dark:text-white">
@@ -372,14 +407,45 @@ export default function Marketplace() {
                               </div>
                               <div className="text-sm text-gray-500">{bid.bidderRole} | {bid.status}</div>
                               {bid.message && <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{bid.message}</p>}
+                              
+                              {bid.counterOffer && (
+                                <div className="mt-2 rounded bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                  Counter Offer: Rs. {Number(bid.counterOffer.amount).toLocaleString("en-IN")} ({bid.counterOffer.status})
+                                </div>
+                              )}
                             </div>
-                            {isOwner && listing.status === "open" && bid.status === "pending" && (
-                              <Button isLoading={saving} color="success" onPress={() => approveBid(listing._id, bid._id)}>
-                                Approve buyer
-                              </Button>
-                            )}
+                            <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                              {isOwner && listing.status === "open" && bid.status === "pending" && (
+                                <>
+                                  {!hasPendingCounter && (
+                                    <div className="flex items-center gap-2 mr-2">
+                                      <input 
+                                        type="number" 
+                                        placeholder="Counter amount" 
+                                        className="w-32 px-2 py-1 text-sm border rounded-md dark:border-gray-700 dark:bg-gray-800"
+                                        id={`counter-${bid._id}`} 
+                                      />
+                                      <Button size="sm" isLoading={saving} color="warning" variant="flat" onPress={() => {
+                                        const amt = document.getElementById(`counter-${bid._id}`).value;
+                                        if (amt) sendCounterOffer(listing._id, bid._id, amt);
+                                      }}>Counter</Button>
+                                    </div>
+                                  )}
+                                  <Button size="sm" isLoading={saving} color="success" onPress={() => approveBid(listing._id, bid._id)}>
+                                    Approve buyer
+                                  </Button>
+                                </>
+                              )}
+                              
+                              {isBidder && hasPendingCounter && (
+                                <div className="flex gap-2">
+                                  <Button size="sm" isLoading={saving} color="success" onPress={() => respondCounterOffer(listing._id, bid._id, "accept")}>Accept</Button>
+                                  <Button size="sm" isLoading={saving} color="danger" variant="flat" onPress={() => respondCounterOffer(listing._id, bid._id, "reject")}>Reject</Button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )) : (
+                        )}) : (
                           <div className="rounded-md border border-dashed p-4 text-sm text-gray-500 dark:border-gray-800">
                             No bids yet.
                           </div>

@@ -5,6 +5,8 @@ import Script from "next/script";
 import axios from "axios";
 import { CreditCard, Loader2, ShieldCheck } from "lucide-react";
 
+import { useRouter } from "next/navigation";
+
 const PAYTM_STAGING_SDK = "https://securegw-stage.paytm.in/merchantpgpui/checkoutjs/merchants/";
 const PAYTM_PROD_SDK = "https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/";
 
@@ -13,6 +15,7 @@ const IS_STAGING = process.env.NEXT_PUBLIC_PAYTM_ENV !== "production";
 const SDK_URL = (IS_STAGING ? PAYTM_STAGING_SDK : PAYTM_PROD_SDK) + MID + ".js";
 
 export default function PaytmCheckout({ listing, bidId, amount, onSuccess, onFailure }) {
+  const router = useRouter();
   const [step, setStep] = useState("idle"); // idle | loading | sdk_ready | paying | polling | done | error
   const [message, setMessage] = useState("");
   const [sdkLoaded, setSdkLoaded] = useState(false);
@@ -27,8 +30,9 @@ export default function PaytmCheckout({ listing, bidId, amount, onSuccess, onFai
         const { data } = await axios.get(`/api/paytm/status?orderId=${paytmOrderId}`);
         if (data.status === "paid") {
           setStep("done");
-          setMessage("Payment successful! You can now schedule the pickup.");
+          setMessage("Payment successful! Redirecting to schedule pickup...");
           if (onSuccess) onSuccess(data);
+          router.push("/pickups");
           return;
         }
         if (data.status === "failed") {
@@ -46,8 +50,6 @@ export default function PaytmCheckout({ listing, bidId, amount, onSuccess, onFai
   }, [onSuccess, onFailure]);
 
   const handlePayNow = useCallback(async () => {
-    if (!sdkLoaded) return setMessage("Payment SDK is still loading.");
-
     setStep("loading"); setMessage("");
 
     let txnToken, paytmOrderId;
@@ -109,7 +111,13 @@ export default function PaytmCheckout({ listing, bidId, amount, onSuccess, onFai
 
   return (
     <>
-      <Script src={SDK_URL} strategy="lazyOnload" crossOrigin="anonymous" onLoad={() => setSdkLoaded(true)} />
+      <Script 
+        src={SDK_URL} 
+        strategy="lazyOnload" 
+        crossOrigin="anonymous" 
+        onLoad={() => setSdkLoaded(true)} 
+        onError={() => console.warn("Paytm SDK failed to load, Mock mode will still work")}
+      />
       <div className="mt-4 space-y-3">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <div className="flex items-start gap-3">
@@ -122,7 +130,7 @@ export default function PaytmCheckout({ listing, bidId, amount, onSuccess, onFai
         </div>
         {message && step === "error" && <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{message}</p>}
         {message && step === "polling" && <p className="text-sm text-gray-500">{message}</p>}
-        <button onClick={handlePayNow} disabled={isLoading || !sdkLoaded} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-blue-600 font-semibold text-white disabled:opacity-60">
+        <button onClick={handlePayNow} disabled={isLoading} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-blue-600 font-semibold text-white disabled:opacity-60">
           {isLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> {step === "polling" ? "Confirming…" : "Opening…"}</> : <><CreditCard className="h-4 w-4" /> Pay ₹{amount}</>}
         </button>
       </div>
