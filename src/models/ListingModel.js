@@ -97,8 +97,23 @@ const listingSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["open", "sold"],
+      enum: ["open", "sold", "closed"],
       default: "open",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "refunded"],
+      default: "unpaid"
+    },
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+      default: null
+    },
+    pickupId: {
+      type: Schema.Types.ObjectId,
+      ref: "Pickup",
+      default: null
     },
     approvedBid: {
       type: Schema.Types.ObjectId,

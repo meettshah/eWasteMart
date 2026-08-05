@@ -1,9 +1,15 @@
 import Together from "together-ai";
 
-
-const together = new Together({
-    apiKey: process.env.TOGETHER_API_KEY,
-});
+let _together = null;
+function getClient() {
+  if (!process.env.TOGETHER_API_KEY) {
+    throw new Error("TOGETHER_API_KEY is not configured.");
+  }
+  if (!_together) {
+    _together = new Together({ apiKey: process.env.TOGETHER_API_KEY });
+  }
+  return _together;
+}
 
 const systemPrompt = `
 *System Prompt for AI Chatbot Integration:*
@@ -57,11 +63,8 @@ const systemPrompt = `
 `;
 
 const runPrompt = async (content) => {
-    if (!process.env.TOGETHER_API_KEY) {
-        throw new Error("TOGETHER_API_KEY is not configured.");
-    }
-
-    const response = await together.chat.completions.create({
+    const client = getClient();
+    const response = await client.chat.completions.create({
         model: "meta-llama/Meta-Llama-3-8B-Instruct-Turbo",
         messages: [{ role: 'system', content: systemPrompt }, { role: "user", content: content }],
     });

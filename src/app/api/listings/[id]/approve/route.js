@@ -11,7 +11,8 @@ export async function POST(req, { params }) {
   }
 
   await mongooseConnect();
-  const listing = await Listing.findById(params.id);
+  const { id } = await params;
+  const listing = await Listing.findById(id);
   if (!listing) return NextResponse.json({ message: "Listing not found." }, { status: 404 });
   if (listing.sellerEmail !== session.user.email) {
     return NextResponse.json({ message: "Only the listing owner can approve a bid." }, { status: 403 });
