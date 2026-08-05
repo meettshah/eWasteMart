@@ -74,7 +74,22 @@ export async function POST(req) {
       await listing.save();
     }
     
-    return NextResponse.redirect(`${baseUrl}/marketplace?payment=success`, 302);
+    try {
+      const { dispatchNotification } = await import("@/lib/notifications");
+      await dispatchNotification({
+        userId: order.payeeId,
+        userEmail: order.payeeEmail,
+        title: "Payment Received",
+        message: `You have received a payment of Rs. ${order.amount.toLocaleString("en-IN")} from ${order.payerName}. The buyer will now schedule a pickup.`,
+        type: "PAYMENT",
+        link: `/orders/${order._id}`,
+        channels: ["IN_APP", "EMAIL"]
+      });
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
+
+    return NextResponse.redirect(`${baseUrl}/pickups?payment=success`, 302);
   } else {
     order.status = "failed";
     await order.save();

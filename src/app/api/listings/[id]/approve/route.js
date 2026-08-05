@@ -32,5 +32,20 @@ export async function POST(req, { params }) {
   listing.status = "sold";
   await listing.save();
 
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications");
+    await dispatchNotification({
+      userId: bid.bidderId,
+      userEmail: bid.bidderEmail,
+      title: "Bid Approved! Action Required",
+      message: `Congratulations! Your bid of Rs. ${bid.amount.toLocaleString("en-IN")} for "${listing.title}" was approved. Please complete the payment to schedule the pickup.`,
+      type: "PAYMENT",
+      link: "/marketplace",
+      channels: ["IN_APP", "EMAIL"]
+    });
+  } catch (err) {
+    console.error("Notification error:", err);
+  }
+
   return NextResponse.json(listing);
 }

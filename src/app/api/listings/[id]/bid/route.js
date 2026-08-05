@@ -40,5 +40,20 @@ export async function POST(req, { params }) {
   });
   await listing.save();
 
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications");
+    await dispatchNotification({
+      userId: listing.sellerId,
+      userEmail: listing.sellerEmail,
+      title: "New Bid Received",
+      message: `${session.user.name} placed a bid of Rs. ${amount.toLocaleString("en-IN")} on your listing "${listing.title}".`,
+      type: "BID",
+      link: "/marketplace",
+      channels: ["IN_APP", "EMAIL"]
+    });
+  } catch (err) {
+    console.error("Notification error:", err);
+  }
+
   return NextResponse.json(listing, { status: 201 });
 }

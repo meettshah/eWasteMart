@@ -15,8 +15,55 @@ function forbidden(message = "You do not have access to this action.") {
 }
 
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return unauthenticated();
+
   await mongooseConnect();
   const listings = await Listing.find().sort({ createdAt: -1 }).lean();
+  
+  const userEmail = session.user.email;
+
+  // Scrub PII for non-participants
+  for (let listing of listings) {
+    const isSeller = listing.sellerEmail === userEmail;
+    const approvedBid = listing.bids?.find(b => b.status === "approved");
+    const isApprovedBuyer = approvedBid?.bidderEmail === userEmail;
+
+    // 1. Scrub Seller info if not the approved buyer
+    if (!isSeller && !isApprovedBuyer) {
+      delete listing.sellerEmail;
+      delete listing.sellerPhone;
+    }
+
+    // 2. Scrub Bids info
+    if (listing.bids && Array.isArray(listing.bids)) {
+      for (let bid of listing.bids) {
+        const isMyBid = bid.bidderEmail === userEmail;
+        if (!isSeller && !isMyBid) {
+          delete bid.bidderEmail;
+        }
+      }
+    }
+
+    // 3. Hide approved buyer name if user is not participant
+    if (listing.status === "sold" && !isSeller && !isApprovedBuyer) {
+      if (approvedBid) {
+        approvedBid.bidderName = "Anonymous Buyer";
+      }
+    }
+    
+    // Hide exact pickupId to prevent guessing
+    if (!isSeller && !isApprovedBuyer) {
+      delete listing.pickupId;
+    }
+  }
+
+  listings.sort((a, b) => {
+    if (a.paymentStatus === "paid" && b.paymentStatus !== "paid") return 1;
+    if (a.paymentStatus !== "paid" && b.paymentStatus === "paid") return -1;
+    return 0;
+  });
+
   return NextResponse.json(listings);
 }
 
