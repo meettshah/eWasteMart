@@ -13,6 +13,7 @@ export default function LoginPage() {
               src="/card_img_02.jpg"
               alt="E-waste recycling facility"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               priority
               className="object-cover"
             />
