@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "types": ["@types/d3-array"],
     "paths": {
       "@/*": ["./src/*"]
     }
