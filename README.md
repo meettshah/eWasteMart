@@ -24,14 +24,6 @@ E-WasteMart is an e-commerce platform dedicated to the responsible management of
 3. **Schedule or Drop Off** your e-waste at a convenient location.
 4. **Shop or Donate** electronics to contribute to our mission of reducing e-waste.
 
-## Contact & Support
-
-For any inquiries, assistance, or support, please reach out to us:
-
-- **Email**: [support@ewastemart.com]
-
-Our support team is here to help with any questions or issues you may have.
-
 ---
 
 Thank you for choosing E-WasteMart! Together, we can make a difference.
