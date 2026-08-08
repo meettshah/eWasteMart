@@ -12,13 +12,34 @@ const LoginSchema = new Schema({
     },
     password: {
         type: String,
-        required: [true, "Must provide a password."],
+        // Optional because Google OAuth users won't have a password
+        required: false,
     },
     role: {
         type: String,
-        enum: ["user", "bulk_seller", "recycler", "enterprise"],
-        default: "user",
+        enum: ["pending", "user", "bulk_seller", "recycler", "enterprise"],
+        default: "pending",
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verifyToken: String,
+    verifyTokenExpiry: Date,
+    resetPasswordToken: String,
+    resetPasswordExpiry: Date,
+    phone: { type: String, default: "" },
+    address: { type: String, default: "" },
+    companyName: { type: String, default: "" },
+    registrationNumber: { type: String, default: "" },
+    paymentDetails: {
+        upiId: { type: String, default: "" },
+        bankAccount: { type: String, default: "" }
+    },
+    preferences: {
+        email: { type: Boolean, default: true },
+        inApp: { type: Boolean, default: true }
+    }
 },
 {
     timestamps: true,
