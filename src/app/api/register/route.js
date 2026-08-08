@@ -1,6 +1,8 @@
 import Login from "@/models/LoginModel";
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { sendEmail } from "@/lib/email";
 
 const { mongooseConnect } = require("@/lib/mongoose")
 
@@ -35,10 +37,33 @@ const registerHandler = async (req) => {
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
-            await Login.create({ name, email: normalizedEmail, role, password: hashedPassword });
+            
+            // Generate verification token
+            const verifyToken = crypto.randomBytes(32).toString('hex');
+            const verifyTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-            return NextResponse.json({ message: "Successfully Registered !" }, { status: 201 });
+            const user = await Login.create({ 
+                name, 
+                email: normalizedEmail, 
+                role, 
+                password: hashedPassword,
+                verifyToken,
+                verifyTokenExpiry
+            });
+
+            // Send verification email
+            const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verifyToken}`;
+            const html = `
+                <h2>Welcome to E-WasteMart, ${name}!</h2>
+                <p>Please verify your email by clicking the link below:</p>
+                <a href="${verifyUrl}">Verify Email</a>
+                <p>If you didn't request this, you can safely ignore this email.</p>
+            `;
+            await sendEmail(normalizedEmail, 'Verify your E-WasteMart account', html);
+
+            return NextResponse.json({ message: "Successfully Registered ! Please check your email to verify your account." }, { status: 201 });
         } catch (error) {
+            console.error("Register error", error);
             return NextResponse.json({ message: 'Error while registering user.' }, { status: 500 });
         }
 

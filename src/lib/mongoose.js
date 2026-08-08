@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import dns from 'dns';
+
+// Force Google DNS to bypass local ISP SRV resolution issues (ECONNREFUSED)
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 export function mongooseConnect(){
     if(mongoose.connection.readyState === 1){
