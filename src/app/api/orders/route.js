@@ -42,10 +42,6 @@ export async function GET() {
       else if (pickup.status === "in_progress" || pickup.status === "picked_up") lifecycleStatus = "in transit";
       else if (pickup.status === "completed") lifecycleStatus = "completed";
       
-      // Auto-heal the order status if it was stuck on 'initiated' but a pickup exists
-      if (order.status !== "paid") {
-        await Order.updateOne({ _id: order._id }, { $set: { status: "paid" } });
-      }
     }
     
     order.lifecycleStatus = lifecycleStatus;

@@ -17,9 +17,9 @@ const BASE_URL = process.env.PAYTM_BASE_URL;
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
-  
+  const configuredSecret = process.env.INTERNAL_API_SECRET;
   const internalSecret = req.headers.get("x-internal-secret");
-  const isInternal = internalSecret === process.env.INTERNAL_API_SECRET;
+  const isInternal = Boolean(configuredSecret) && Boolean(internalSecret) && internalSecret === configuredSecret;
   
   if (!session?.user && !isInternal) {
     return NextResponse.json({ message: "Not logged in" }, { status: 401 });

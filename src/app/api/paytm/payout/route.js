@@ -8,9 +8,14 @@ import { mongooseConnect } from "@/lib/mongoose";
 import { Order } from "@/models/Order";
 
 export async function POST(req) {
+  const configuredSecret = process.env.INTERNAL_API_SECRET;
+  if (!configuredSecret) {
+    return NextResponse.json({ message: "Internal secret is not configured" }, { status: 503 });
+  }
+
   const internalSecret = req.headers.get("x-internal-secret");
   
-  if (internalSecret !== process.env.INTERNAL_API_SECRET) {
+  if (!internalSecret || internalSecret !== configuredSecret) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }
 

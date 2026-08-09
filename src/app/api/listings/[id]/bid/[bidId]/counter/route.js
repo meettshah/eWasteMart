@@ -48,6 +48,9 @@ export async function POST(req, { params }) {
   if (isBidder) {
     // Bidder responds to a counter offer
     const { action } = body; // "accept" or "reject"
+    if (!["accept", "reject"].includes(action)) {
+      return NextResponse.json({ message: "Invalid action. Use 'accept' or 'reject'." }, { status: 400 });
+    }
     if (!bid.counterOffer || bid.counterOffer.status !== "pending") {
       return NextResponse.json({ message: "No pending counter offer found" }, { status: 400 });
     }
@@ -80,7 +83,7 @@ export async function POST(req, { params }) {
     }
 
     await listing.save();
-    return NextResponse.json({ message: `Counter offer ${action}ed` });
+    return NextResponse.json({ message: `Counter offer ${action === "accept" ? "accepted" : "rejected"}` });
   }
 
   return NextResponse.json({ message: "Forbidden" }, { status: 403 });
