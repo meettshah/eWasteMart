@@ -2,14 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-input {
-  @apply border-2 dark:border-gray-700 py-1 px-2 border-primary outline-none rounded-md;
+@layer base {
+  body {
+    @apply antialiased;
+  }
 }
 
-select {
-  @apply border-2 dark:border-gray-700 py-1 px-2 border-primary outline-none rounded-md;
+@layer components {
+  .glass-nav {
+    @apply bg-white/70 backdrop-blur-lg border-b border-white/20 dark:bg-gray-950/70 dark:border-gray-800/50 shadow-sm sticky top-0 z-50;
+  }
+  
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:bg-gray-900/60 dark:border-gray-700/30;
+  }
 }
 
-textarea {
-  @apply border-2 dark:border-gray-700 py-1 px-2 border-primary outline-none rounded-md;
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  }
+}
+
+/* Base input overrides for better focus states */
+input, select, textarea {
+  @apply border border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 py-2 px-3 outline-none rounded-xl transition-all duration-300;
+}
+input:focus, select:focus, textarea:focus {
+  @apply ring-2 ring-primary/20 border-primary bg-white dark:bg-gray-900;
 }
