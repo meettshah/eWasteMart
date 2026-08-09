@@ -50,7 +50,7 @@ export async function POST(req, { params }) {
       try { await sendOtp(pickup.sellerPhone, otp, pickup.sellerName); } catch (e) {}
     }
 
-    return NextResponse.json({ message: "OTP generated", otp, expiresAt: otpExpiry });
+    return NextResponse.json({ message: "OTP generated", expiresAt: otpExpiry });
   }
 
   if (action === "verify") {

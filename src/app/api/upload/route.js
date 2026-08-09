@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { mongooseConnect } from '@/lib/mongoose';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-const links = [];
 const uploadHandler = async (req) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  if (!session.user.role || session.user.role === "pending") {
+    return NextResponse.json({ message: "Complete onboarding to upload files." }, { status: 403 });
+  }
+
   await mongooseConnect();
 
   const data = await req.formData();
@@ -34,12 +43,10 @@ const uploadHandler = async (req) => {
     ContentType: files.type,
     ACL: 'public-read',
   };
-
   await client.send(new PutObjectCommand(params));
   const link = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${newFilename}`;
-  links.push(link);
 
-  return NextResponse.json({ message: "File Uploaded", links });
+  return NextResponse.json({ message: "File Uploaded", links: [link] });
 }
 
 
