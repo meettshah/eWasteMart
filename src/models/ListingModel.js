@@ -137,6 +137,11 @@ const listingSchema = new Schema(
       type: [bidSchema],
       default: [],
     },
+    impact: {
+      co2SavedKg: { type: Number, default: 0 },
+      metalsRecoveredKg: { type: Number, default: 0 },
+      toxinsDivertedKg: { type: Number, default: 0 },
+    },
   },
   { timestamps: true }
 );

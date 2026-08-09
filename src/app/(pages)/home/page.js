@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
 import { ArrowRight, Building2, Factory, ListPlus, Recycle, Scale, UserRound } from "lucide-react";
 
 const roleGuidance = {
@@ -38,63 +39,111 @@ export default function HomePage() {
   const role = session?.user?.role || "user";
   const guidance = roleGuidance[role] || roleGuidance.user;
 
+  // Mock data for Environmental Impact (would normally fetch from DB)
+  const impactData = {
+    divertedKg: 1450,
+    co2SavedKg: 2100,
+    metalsRecoveredKg: 320,
+    badges: ["🌱 Eco-Starter", "🥉 Bronze Recycler"],
+  };
+
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-8 dark:bg-gray-950">
+    <main className="min-h-screen bg-gray-50/50 px-6 py-8 dark:bg-gray-950">
       <div className="mx-auto max-w-7xl space-y-8">
-        <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900 md:p-8">
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="glass-card rounded-2xl p-6 md:p-8"
+        >
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-primary">Dashboard</p>
               <h1 className="mt-3 text-4xl font-bold text-gray-950 dark:text-white">
-                Welcome back, {session?.user?.name || "E-WasteMart member"}.
+                Welcome back, <span className="text-gradient">{session?.user?.name || "Member"}</span>.
               </h1>
-              <p className="mt-4 max-w-2xl text-gray-600 dark:text-gray-300">
+              <p className="mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
                 Your role controls what you can do across the platform. Use this dashboard to jump into the right workflow.
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link href="/marketplace" className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 font-semibold text-white">
-                  {guidance.action} <ArrowRight className="h-4 w-4" />
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                <Link href="/marketplace" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40">
+                  {guidance.action} <ArrowRight className="h-5 w-5" />
                 </Link>
-                <Link href="/profile" className="inline-flex items-center justify-center rounded-md border border-gray-300 px-5 py-3 font-semibold text-gray-900 dark:border-gray-700 dark:text-white">
+                <Link href="/profile" className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white/50 px-6 py-3.5 font-semibold text-gray-900 transition-all hover:bg-white dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:hover:bg-gray-800">
                   View profile
                 </Link>
               </div>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-950">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/80"
+            >
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  {role === "recycler" ? <Recycle /> : role === "enterprise" ? <Building2 /> : <UserRound />}
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  {role === "recycler" ? <Recycle className="h-7 w-7" /> : role === "enterprise" ? <Building2 className="h-7 w-7" /> : <UserRound className="h-7 w-7" />}
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-950 dark:text-white">{guidance.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{guidance.body}</p>
+                  <h2 className="text-xl font-bold text-gray-950 dark:text-white">{guidance.title}</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{guidance.body}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
 
-        <section className="grid gap-5 md:grid-cols-3">
-          {quickActions.map((action) => (
-            <Link key={action.href} href={action.href} className="rounded-lg bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900">
-              <action.icon className="h-7 w-7 text-primary" />
-              <h2 className="mt-5 text-xl font-semibold text-gray-950 dark:text-white">{action.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{action.text}</p>
+        {/* Environmental Impact Dashboard */}
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <h2 className="mb-4 text-2xl font-bold text-gray-950 dark:text-white">Your Environmental Impact</h2>
+          <div className="grid gap-5 md:grid-cols-3">
+            <motion.div whileHover={{ y: -4 }} className="glass-card rounded-2xl p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                <Recycle className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 text-3xl font-black text-gray-950 dark:text-white">{impactData.divertedKg} <span className="text-lg font-medium text-gray-500">kg</span></h3>
+              <p className="mt-1 font-medium text-gray-600 dark:text-gray-400">E-Waste Diverted</p>
+            </motion.div>
+            <motion.div whileHover={{ y: -4 }} className="glass-card rounded-2xl p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                <Scale className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 text-3xl font-black text-gray-950 dark:text-white">{impactData.co2SavedKg} <span className="text-lg font-medium text-gray-500">kg</span></h3>
+              <p className="mt-1 font-medium text-gray-600 dark:text-gray-400">CO₂ Emissions Saved</p>
+            </motion.div>
+            <motion.div whileHover={{ y: -4 }} className="glass-card rounded-2xl p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+                <Factory className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 text-3xl font-black text-gray-950 dark:text-white">{impactData.metalsRecoveredKg} <span className="text-lg font-medium text-gray-500">kg</span></h3>
+              <p className="mt-1 font-medium text-gray-600 dark:text-gray-400">Toxic Metals Recovered</p>
+            </motion.div>
+          </div>
+        </motion.section>
+
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="grid gap-5 md:grid-cols-3"
+        >
+          {quickActions.map((action, i) => (
+            <Link key={action.href} href={action.href}>
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="glass-card h-full rounded-2xl p-6 transition-shadow hover:shadow-xl dark:hover:shadow-primary/5"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <action.icon className="h-6 w-6" />
+                </div>
+                <h2 className="mt-5 text-xl font-bold text-gray-950 dark:text-white">{action.title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{action.text}</p>
+              </motion.div>
             </Link>
           ))}
-        </section>
-
-        <section className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
-          <div className="flex items-start gap-4">
-            <ListPlus className="mt-1 h-6 w-6 text-primary" />
-            <div>
-              <h2 className="text-xl font-semibold text-gray-950 dark:text-white">Platform structure</h2>
-              <p className="mt-2 text-gray-600 dark:text-gray-300">
-                Sellers create listings, recyclers and enterprises submit bids, and the listing owner approves one buyer. Everything important happens in the marketplace.
-              </p>
-            </div>
-          </div>
-        </section>
+        </motion.section>
       </div>
     </main>
   );

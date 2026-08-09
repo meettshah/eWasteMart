@@ -8,7 +8,7 @@ import PaytmCheckout from "@/components/PaytmCheckout";
 import PickupScheduler from "@/components/PickupScheduler";
 import PickupCard from "@/components/PickupCard";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Sparkles, IndianRupee, Loader2 } from "lucide-react";
 
 const SELLER_ROLES = ["user", "bulk_seller", "enterprise"];
 const BIDDER_ROLES = ["recycler", "enterprise"];
@@ -41,6 +41,8 @@ export default function Marketplace() {
   const [bidForms, setBidForms] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [estimating, setEstimating] = useState(false);
+  const [estimateResult, setEstimateResult] = useState(null);
   const [message, setMessage] = useState("");
 
   const role = session?.user?.role;
@@ -102,14 +104,35 @@ export default function Marketplace() {
     setSaving(true);
     setMessage("");
     try {
-      await axios.post("/api/listings", listingForm);
+      const payload = { ...listingForm, impact: estimateResult?.impact };
+      await axios.post("/api/listings", payload);
       setListingForm(emptyListing);
+      setEstimateResult(null);
       setMessage("Listing created. Recyclers and enterprises can now bid.");
       await loadListings();
     } catch (error) {
       setMessage(error.response?.data?.message || "Could not create listing.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const estimatePrice = async () => {
+    if (!listingForm.description || !listingForm.title || !listingForm.category) {
+      setMessage("Please fill out Title, Category, and Description first for a better estimate.");
+      return;
+    }
+    setEstimating(true);
+    setMessage("");
+    setEstimateResult(null);
+    try {
+      const res = await axios.post("/api/estimate", listingForm);
+      const { min, max, reasoning, impact } = res.data;
+      setEstimateResult({ min, max, reasoning, impact });
+    } catch (error) {
+      setMessage("Could not get AI estimate.");
+    } finally {
+      setEstimating(false);
     }
   };
 
@@ -217,69 +240,161 @@ export default function Marketplace() {
                 Your current role is {role}. Recyclers can bid, but cannot create seller listings.
               </div>
             ) : (
-              <form onSubmit={createListing} className="mt-5 space-y-4">
-                <input
-                  value={listingForm.title}
-                  onChange={(event) => updateListingField("title", event.target.value)}
-                  placeholder="Lot title"
-                  className="w-full"
-                  required
-                />
-                <select
-                  value={listingForm.category}
-                  onChange={(event) => updateListingField("category", event.target.value)}
-                  className="w-full"
-                >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-2 gap-3">
+              <form onSubmit={createListing} className="mt-6 flex flex-col gap-5">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">Lot Title <span className="text-red-500">*</span></label>
                   <input
-                    type="number"
-                    min="1"
-                    value={listingForm.quantity}
-                    onChange={(event) => updateListingField("quantity", event.target.value)}
-                    placeholder="Quantity"
+                    value={listingForm.title}
+                    onChange={(event) => updateListingField("title", event.target.value)}
+                    placeholder="e.g., 50 Dell Laptops (2018)"
+                    className="w-full"
                     required
                   />
-                  <select value={listingForm.unit} onChange={(event) => updateListingField("unit", event.target.value)}>
-                    <option value="items">Items</option>
-                    <option value="kg">Kg</option>
-                    <option value="tons">Tons</option>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">Category <span className="text-red-500">*</span></label>
+                  <select
+                    value={listingForm.category}
+                    onChange={(event) => updateListingField("category", event.target.value)}
+                    className="w-full"
+                  >
+                    {categories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <select value={listingForm.condition} onChange={(event) => updateListingField("condition", event.target.value)}>
-                    <option value="working">Working</option>
-                    <option value="repairable">Repairable</option>
-                    <option value="scrap">Scrap</option>
-                    <option value="mixed">Mixed</option>
-                  </select>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">Quantity <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={listingForm.quantity}
+                      onChange={(event) => updateListingField("quantity", event.target.value)}
+                      placeholder="e.g., 50"
+                      className="w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">Unit <span className="text-red-500">*</span></label>
+                    <select value={listingForm.unit} onChange={(event) => updateListingField("unit", event.target.value)} className="w-full">
+                      <option value="items">Items</option>
+                      <option value="kg">Kg</option>
+                      <option value="tons">Tons</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">Condition <span className="text-red-500">*</span></label>
+                    <select value={listingForm.condition} onChange={(event) => updateListingField("condition", event.target.value)} className="w-full">
+                      <option value="working">Working</option>
+                      <option value="repairable">Repairable</option>
+                      <option value="scrap">Scrap</option>
+                      <option value="mixed">Mixed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <span>Expected Price</span>
+                      <span className="text-xs text-gray-500">(INR)</span>
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <IndianRupee className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        value={listingForm.askingPrice}
+                        onChange={(event) => updateListingField("askingPrice", event.target.value)}
+                        placeholder="0.00"
+                        className="w-full pl-9"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">Pickup Location <span className="text-red-500">*</span></label>
                   <input
-                    type="number"
-                    min="0"
-                    value={listingForm.askingPrice}
-                    onChange={(event) => updateListingField("askingPrice", event.target.value)}
-                    placeholder="Expected price"
+                    value={listingForm.location}
+                    onChange={(event) => updateListingField("location", event.target.value)}
+                    placeholder="Enter full address or city"
+                    className="w-full"
+                    required
                   />
                 </div>
-                <input
-                  value={listingForm.location}
-                  onChange={(event) => updateListingField("location", event.target.value)}
-                  placeholder="Pickup location"
-                  className="w-full"
-                  required
-                />
-                <textarea
-                  value={listingForm.description}
-                  onChange={(event) => updateListingField("description", event.target.value)}
-                  placeholder="Describe devices, brands, condition and pickup notes"
-                  className="min-h-28 w-full"
-                  required
-                />
-                <Button isLoading={saving} type="submit" color="primary" className="w-full font-semibold">
-                  Publish listing
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">Description <span className="text-red-500">*</span></label>
+                  <textarea
+                    value={listingForm.description}
+                    onChange={(event) => updateListingField("description", event.target.value)}
+                    placeholder="Describe the e-waste in detail (brands, exact models, condition notes) to get a better AI estimate and more bids."
+                    className="min-h-28 w-full resize-y"
+                    required
+                  />
+                </div>
+
+                <div className="rounded-xl border border-secondary/20 bg-secondary/5 p-4 dark:bg-secondary/10">
+                  <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+                    Not sure how much it's worth? Let our AI analyze your lot and estimate the scrap market value.
+                  </p>
+                  
+                  {estimateResult && (
+                    <div className="mb-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900 border border-secondary/10">
+                      <div className="flex items-center gap-2 text-secondary">
+                        <Sparkles className="h-5 w-5" />
+                        <h4 className="font-bold text-lg">AI Estimate: Rs. {estimateResult.min} - {estimateResult.max}</h4>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{estimateResult.reasoning}</p>
+                      
+                      {estimateResult.impact && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            🌱 {estimateResult.impact.co2SavedKg}kg CO₂ Saved
+                          </span>
+                          <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            ♻️ {estimateResult.impact.metalsRecoveredKg}kg Metals Recovered
+                          </span>
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                            🛡️ {estimateResult.impact.toxinsDivertedKg}kg Toxins Diverted
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="mt-4 border-t border-gray-100 pt-3 dark:border-gray-800">
+                        <button
+                          type="button"
+                          onClick={() => updateListingField("askingPrice", Math.round((estimateResult.min + estimateResult.max) / 2))}
+                          className="text-sm font-semibold text-secondary hover:text-secondary-600 dark:text-secondary-400"
+                        >
+                          + Use Suggested Price (Rs. {Math.round((estimateResult.min + estimateResult.max) / 2)})
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button 
+                    isLoading={estimating} 
+                    onPress={estimatePrice} 
+                    color="secondary" 
+                    variant={estimateResult ? "bordered" : "flat"} 
+                    type="button" 
+                    className="w-full font-semibold"
+                    startContent={!estimating && !estimateResult && <Sparkles className="h-4 w-4" />}
+                  >
+                    {estimating ? "Analyzing market data..." : estimateResult ? "Recalculate Estimate" : "Get AI Smart Estimate"}
+                  </Button>
+                </div>
+
+                <Button isLoading={saving} type="submit" color="primary" className="mt-2 w-full py-6 text-lg font-bold shadow-lg shadow-primary/20">
+                  Publish Listing
                 </Button>
               </form>
             )}
@@ -313,6 +428,20 @@ export default function Marketplace() {
                           {listing.category} | {listing.quantity} {listing.unit} | {listing.condition} | {listing.location}
                         </p>
                         <p className="mt-3 text-gray-700 dark:text-gray-300">{listing.description}</p>
+                        
+                        {listing.impact && (listing.impact.co2SavedKg > 0) && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                              🌱 {listing.impact.co2SavedKg}kg CO₂ Saved
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                              ♻️ {listing.impact.metalsRecoveredKg}kg Metals Recovered
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                              🛡️ {listing.impact.toxinsDivertedKg}kg Toxins Diverted
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="rounded-md border p-3 text-right dark:border-gray-800">
                         <div className="text-xs text-gray-500">Expected price</div>

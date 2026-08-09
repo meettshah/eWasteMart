@@ -96,6 +96,7 @@ export async function POST(req) {
     location: body.location,
     description: body.description,
     askingPrice,
+    impact: body.impact || undefined,
   });
 
   return NextResponse.json(listing, { status: 201 });
