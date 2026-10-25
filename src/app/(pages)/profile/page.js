@@ -49,9 +49,11 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
-            <Link href="/settingtab" className="rounded-md border border-gray-300 px-5 py-3 text-center font-semibold dark:border-gray-700">
-              Account settings
-            </Link>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link href="/settings" className="rounded-md border border-gray-300 px-5 py-3 text-center font-semibold dark:border-gray-700">
+                Edit Settings
+              </Link>
+            </div>
           </div>
         </section>
 

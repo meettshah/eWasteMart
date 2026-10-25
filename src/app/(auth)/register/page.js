@@ -36,6 +36,7 @@ export default function RegisterPage() {
               src="/card_img_05.jpg"
               alt="Responsible e-waste sorting"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               priority
               className="object-cover"
             />

@@ -7,15 +7,27 @@ import Recycler from "@/models/RecyclerModel";
 const RECYCLER_ROLES = ["recycler", "enterprise"];
 
 export async function GET(req) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ message: "Please login first." }, { status: 401 });
+  }
+
   await mongooseConnect();
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email")?.toLowerCase().trim();
 
   if (email) {
-    return NextResponse.json(await Recycler.findOne({ email }));
+    if (email !== session.user.email) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+    const ownProfile = await Recycler.findOne({ email });
+    return NextResponse.json(ownProfile);
   }
 
-  return NextResponse.json(await Recycler.find().sort({ createdAt: -1 }));
+  const recyclers = await Recycler.find()
+    .select("name typeWaste description images properties createdAt updatedAt")
+    .sort({ createdAt: -1 });
+  return NextResponse.json(recyclers);
 }
 
 export async function POST(req) {

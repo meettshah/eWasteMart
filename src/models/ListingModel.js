@@ -31,9 +31,18 @@ const bidSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "expired"],
       default: "pending",
     },
+    expiresAt: {
+      type: Date,
+      default: () => new Date(+new Date() + 48 * 60 * 60 * 1000), // Default 48 hours
+    },
+    counterOffer: {
+      amount: { type: Number },
+      message: { type: String },
+      status: { type: String, enum: ["pending", "accepted", "rejected"] },
+    }
   },
   { timestamps: true }
 );
@@ -95,10 +104,30 @@ const listingSchema = new Schema(
       min: 0,
       default: 0,
     },
+    hagglingLimit: {
+      type: String,
+      enum: ["strict", "open"],
+      default: "strict", // strict = 1 round, open = up to 3 rounds
+    },
     status: {
       type: String,
-      enum: ["open", "sold"],
+      enum: ["open", "sold", "closed"],
       default: "open",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "refunded"],
+      default: "unpaid"
+    },
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+      default: null
+    },
+    pickupId: {
+      type: Schema.Types.ObjectId,
+      ref: "Pickup",
+      default: null
     },
     approvedBid: {
       type: Schema.Types.ObjectId,
@@ -133,6 +162,11 @@ const listingSchema = new Schema(
     bids: {
       type: [bidSchema],
       default: [],
+    },
+    impact: {
+      co2SavedKg: { type: Number, default: 0 },
+      metalsRecoveredKg: { type: Number, default: 0 },
+      toxinsDivertedKg: { type: Number, default: 0 },
     },
   },
   { timestamps: true }

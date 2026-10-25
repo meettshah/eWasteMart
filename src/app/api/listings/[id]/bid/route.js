@@ -16,7 +16,8 @@ export async function POST(req, { params }) {
   }
 
   await mongooseConnect();
-  const listing = await Listing.findById(params.id);
+  const { id } = await params;
+  const listing = await Listing.findById(id);
   if (!listing) return NextResponse.json({ message: "Listing not found." }, { status: 404 });
   if (listing.status !== "open") return NextResponse.json({ message: "This listing is already sold." }, { status: 400 });
   if (listing.sellerEmail === session.user.email) {
@@ -38,6 +39,21 @@ export async function POST(req, { params }) {
     message: body.message || "",
   });
   await listing.save();
+
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications");
+    await dispatchNotification({
+      userId: listing.sellerId,
+      userEmail: listing.sellerEmail,
+      title: "New Bid Received",
+      message: `${session.user.name} placed a bid of Rs. ${amount.toLocaleString("en-IN")} on your listing "${listing.title}".`,
+      type: "BID",
+      link: "/marketplace",
+      channels: ["IN_APP", "EMAIL"]
+    });
+  } catch (err) {
+    console.error("Notification error:", err);
+  }
 
   return NextResponse.json(listing, { status: 201 });
 }

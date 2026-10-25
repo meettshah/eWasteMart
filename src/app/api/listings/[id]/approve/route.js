@@ -11,7 +11,8 @@ export async function POST(req, { params }) {
   }
 
   await mongooseConnect();
-  const listing = await Listing.findById(params.id);
+  const { id } = await params;
+  const listing = await Listing.findById(id);
   if (!listing) return NextResponse.json({ message: "Listing not found." }, { status: 404 });
   if (listing.sellerEmail !== session.user.email) {
     return NextResponse.json({ message: "Only the listing owner can approve a bid." }, { status: 403 });
@@ -30,6 +31,21 @@ export async function POST(req, { params }) {
   listing.approvedBid = bid._id;
   listing.status = "sold";
   await listing.save();
+
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications");
+    await dispatchNotification({
+      userId: bid.bidderId,
+      userEmail: bid.bidderEmail,
+      title: "Bid Approved! Action Required",
+      message: `Congratulations! Your bid of Rs. ${bid.amount.toLocaleString("en-IN")} for "${listing.title}" was approved. Please complete the payment to schedule the pickup.`,
+      type: "PAYMENT",
+      link: "/marketplace",
+      channels: ["IN_APP", "EMAIL"]
+    });
+  } catch (err) {
+    console.error("Notification error:", err);
+  }
 
   return NextResponse.json(listing);
 }
