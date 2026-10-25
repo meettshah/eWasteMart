@@ -19,6 +19,11 @@ const LoginSchema = new Schema({
         enum: ["user", "bulk_seller", "recycler", "enterprise"],
         default: "user",
     },
+    tokenBalance: {
+        type: Number,
+        min: 0,
+        default: 100000,
+    },
 },
 {
     timestamps: true,

@@ -104,6 +104,32 @@ const listingSchema = new Schema(
       type: Schema.Types.ObjectId,
       default: null,
     },
+    payment: {
+      status: {
+        type: String,
+        enum: ["unpaid", "processing", "paid"],
+        default: "unpaid",
+      },
+      method: {
+        type: String,
+        enum: ["currency", "token", null],
+        default: null,
+      },
+      amount: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      paidAt: {
+        type: Date,
+        default: null,
+      },
+      transactionId: {
+        type: Schema.Types.ObjectId,
+        ref: "PaymentTransaction",
+        default: null,
+      },
+    },
     bids: {
       type: [bidSchema],
       default: [],
