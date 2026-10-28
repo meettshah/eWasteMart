@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { generateWithGemini } from "@/lib/gemini";
 
 const estimatePrompt = `
 You are an expert e-waste valuation and environmental impact AI.
@@ -36,61 +37,59 @@ export async function POST(req) {
             return NextResponse.json({ message: "Please provide a description." }, { status: 400 });
         }
 
-        if (!process.env.OPENROUTER_API_KEY) {
-            return NextResponse.json({ message: "OPENROUTER_API_KEY is not configured." }, { status: 500 });
+        function computeFallback() {
+            const qty = Number(listingData.quantity) || 1;
+            const categoryMultipliers = {
+                "Computers and peripherals": { base: 1200, co2: 28, metals: 3.2, toxins: 0.8 },
+                "Mobile and personal devices": { base: 600, co2: 14, metals: 0.9, toxins: 0.3 },
+                "Televisions and displays": { base: 800, co2: 35, metals: 2.1, toxins: 1.4 },
+                "Audio and video equipment": { base: 450, co2: 12, metals: 1.5, toxins: 0.2 },
+                "Networking devices": { base: 350, co2: 8, metals: 0.7, toxins: 0.1 },
+                "Batteries and chargers": { base: 150, co2: 16, metals: 1.8, toxins: 2.2 },
+                "Mixed e-waste": { base: 250, co2: 10, metals: 1.0, toxins: 0.5 },
+            };
+            const factors = categoryMultipliers[listingData.category] || categoryMultipliers["Mixed e-waste"];
+            const conditionFactor = listingData.condition === "working" ? 1.5 : listingData.condition === "repairable" ? 1.0 : 0.6;
+            const estimatedVal = Math.round(factors.base * qty * conditionFactor);
+            const min = Math.round(estimatedVal * 0.8);
+            const max = Math.round(estimatedVal * 1.2);
+
+            return NextResponse.json({
+                min,
+                max,
+                reasoning: `Calculated from circular economy scrap indices for ${qty} ${listingData.unit || 'units'} of ${listingData.category || 'mixed'} in ${listingData.condition || 'mixed'} condition.`,
+                impact: {
+                    co2SavedKg: Number((factors.co2 * qty).toFixed(1)),
+                    metalsRecoveredKg: Number((factors.metals * qty).toFixed(1)),
+                    toxinsDivertedKg: Number((factors.toxins * qty).toFixed(1)),
+                },
+                isFallback: true,
+            });
         }
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                "HTTP-Referer": "http://localhost:3000",
-                "X-Title": "eWasteMart",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "openrouter/free",
-                messages: [
-                    { role: "system", content: estimatePrompt },
-                    { role: "user", content: JSON.stringify(listingData) }
-                ]
-            })
-        });
+        try {
+            const prompt = `${estimatePrompt}\n\nLot details: ${JSON.stringify(listingData)}`;
+            const raw = await generateWithGemini(prompt, { temperature: 0.3, maxTokens: 300 });
 
-        if (!response.ok) {
-            throw new Error(`OpenRouter API error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (data.choices && data.choices.length > 0) {
-            let content = data.choices[0].message.content;
-            
-            // Extract JSON object using regex in case the AI includes conversational text before/after
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                content = jsonMatch[0];
+            if (raw) {
+                const match = raw.match(/\{[\s\S]*\}/);
+                if (match) {
+                    const parsed = JSON.parse(match[0]);
+                    if (parsed.min && parsed.max) {
+                        return NextResponse.json({ ...parsed, provider: "gemini" });
+                    }
+                }
             }
-
-            try {
-                const parsed = JSON.parse(content);
-                return NextResponse.json(parsed);
-            } catch (e) {
-                console.error("AI returned invalid JSON:", content);
-                return NextResponse.json({ 
-                  min: 100, max: 500, 
-                  reasoning: "Generic estimate fallback due to AI parse error.",
-                  impact: { co2SavedKg: 0, metalsRecoveredKg: 0, toxinsDivertedKg: 0 }
-                });
-            }
-        } else {
-            throw new Error("No completion choices returned.");
+        } catch (apiErr) {
+            console.warn("Gemini estimation failed, using circular index heuristic:", apiErr.message);
         }
+
+        return computeFallback();
     } catch (error) {
         console.error("Estimate API Error:", error);
         return NextResponse.json(
             { message: "AI estimation is unavailable right now." },
-            { status: 503 }
+            { status: 500 }
         );
     }
 }

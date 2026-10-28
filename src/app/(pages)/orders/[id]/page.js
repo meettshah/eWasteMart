@@ -8,6 +8,7 @@ import { CheckCircle2, Clock3, MapPin, Package, Truck, Wallet, FileText, Loader2
 import Link from "next/link";
 
 import { motion } from "framer-motion";
+import ImpactReport from "@/components/ImpactReport";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -67,28 +68,35 @@ export default function OrderDetailsPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50/50 px-4 py-8 dark:bg-gray-950">
+    <main className="min-h-screen bg-slate-50/60 px-4 py-8 text-slate-900 dark:bg-[#090D14] dark:text-white md:px-8 md:py-12">
       <div className="mx-auto max-w-5xl space-y-8">
-        <Link href="/payments" className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary dark:hover:text-primary">
+        <Link href="/payments" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400">
           <ArrowLeft className="h-4 w-4" /> Back to Payment History
         </Link>
 
         <motion.section 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-2xl p-8"
+          className="glass-card rounded-3xl p-8 shadow-card"
         >
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-950 dark:text-white">Order: {listing?.title}</h1>
-              <p className="mt-2 font-mono text-sm text-gray-500">Txn ID: {order.paytmTxnId || order.paytmOrderId}</p>
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-2">
+                CPCB Manifest Tracked
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white md:text-3xl">
+                Order: {listing?.title}
+              </h1>
+              <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
+                Txn ID: {order.paytmTxnId || order.paytmOrderId}
+              </p>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white/60 p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900/60">
-              <div className="text-sm font-medium text-gray-500">Amount</div>
-              <div className="text-3xl font-black text-gray-950 dark:text-white">Rs. {Number(order.amount).toLocaleString("en-IN")}</div>
-              <div className="mt-1 flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                <span className={`h-2 w-2 rounded-full ${isOutgoing ? 'bg-red-500' : 'bg-green-500'}`}></span>
-                {isOutgoing ? `Paid to ${order.payeeName}` : `Received from ${order.payerName}`}
+            <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/70">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Settled Amount</div>
+              <div className="text-3xl font-extrabold text-slate-950 dark:text-white">Rs. {Number(order.amount).toLocaleString("en-IN")}</div>
+              <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className={`h-2 w-2 rounded-full ${isOutgoing ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                {isOutgoing ? `Disbursed to ${order.payeeName}` : `Received from ${order.payerName}`}
               </div>
             </div>
           </div>
@@ -169,6 +177,23 @@ export default function OrderDetailsPage() {
             </div>
           </div>
         </motion.section>
+
+        {listing && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+          >
+            <h3 className="mb-2 text-base font-bold text-gray-900 dark:text-white">
+              🌱 Environmental Impact Certificate
+            </h3>
+            <p className="mb-4 text-xs text-gray-500">
+              Generate an official, RAG-grounded AI environmental impact report for this transaction.
+            </p>
+            <ImpactReport listing={listing} />
+          </motion.div>
+        )}
       </div>
     </main>
   );

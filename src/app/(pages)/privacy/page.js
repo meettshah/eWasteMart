@@ -1,39 +1,63 @@
+import { ShieldCheck, Lock, Eye, FileText } from "lucide-react";
+
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-12 dark:bg-gray-950">
-      <div className="mx-auto max-w-4xl rounded-xl bg-white p-8 shadow-sm dark:bg-gray-900 md:p-12">
-        <h1 className="text-3xl font-bold text-gray-950 dark:text-white">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-gray-500">Last updated: {new Date().toLocaleDateString()}</p>
+    <main className="min-h-screen bg-slate-50/60 px-4 py-8 text-slate-900 dark:bg-[#090D14] dark:text-white md:px-8 md:py-12">
+      <div className="mx-auto max-w-4xl space-y-8">
         
-        <div className="mt-8 space-y-8 text-gray-700 dark:text-gray-300">
-          <section>
-            <h2 className="text-xl font-semibold text-gray-950 dark:text-white">1. Information We Collect</h2>
-            <p className="mt-3 leading-relaxed">
-              When you use E-WasteMart, we may collect the following types of information:
+        {/* Header */}
+        <div className="rounded-3xl border border-slate-200/80 bg-white/80 p-8 shadow-card backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/80 md:p-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-3">
+            <ShieldCheck className="h-4 w-4" /> DPDP Act 2023 & MoEFCC Compliant
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white md:text-4xl">
+            Privacy Policy & Data Security
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Last updated: October 2026 • Effective for all E-WasteMart transactions and services
+          </p>
+        </div>
+
+        {/* Content Body */}
+        <div className="glass-card rounded-3xl p-8 md:p-12 space-y-8 text-slate-700 dark:text-slate-300">
+          <section className="space-y-3">
+            <div className="flex items-center gap-3 text-slate-950 dark:text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <FileText className="h-5 w-5" />
+              </div>
+              <h2 className="text-xl font-bold">1. Information We Collect</h2>
+            </div>
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+              When you interact with E-WasteMart, we collect strictly necessary data to facilitate transparent, authenticated, and environmentally audited recycling transactions:
             </p>
-            <ul className="mt-3 list-disc space-y-2 pl-6">
-              <li><strong>Account Data:</strong> Name, email address, role, and organization details (if applicable).</li>
-              <li><strong>Usage Data:</strong> Listings created, bids placed, and platform interactions.</li>
-              <li><strong>Logistics Data:</strong> Location or pickup addresses provided for transactions.</li>
+            <ul className="space-y-2 text-sm pl-4 list-disc marker:text-emerald-500">
+              <li><strong>Account Credentials:</strong> Name, verified email address, phone contact, and registered organization details.</li>
+              <li><strong>E-Waste Manifest Data:</strong> Device types, photos, condition attributes, AI diagnostic scores, and declared hardware weights.</li>
+              <li><strong>Logistics & Geolocation:</strong> Pickup coordinates, transit checkpoints, and recipient authorized processing facilities.</li>
             </ul>
           </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-gray-950 dark:text-white">2. How We Use Your Data</h2>
-            <p className="mt-3 leading-relaxed">
-              Your data is primarily used to facilitate the core functions of the marketplace:
+          <section className="space-y-3 border-t border-slate-100 pt-8 dark:border-slate-800/80">
+            <div className="flex items-center gap-3 text-slate-950 dark:text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                <Lock className="h-5 w-5" />
+              </div>
+              <h2 className="text-xl font-bold">2. How We Secure & Process Data</h2>
+            </div>
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+              Data collected is processed under strict end-to-end encryption. Diagnostic images uploaded for Computer Vision classification are scrubbed of EXIF metadata before analysis. We never store raw debit/credit numbers; all payments use secure bank-grade escrow gateways.
             </p>
-            <ul className="mt-3 list-disc space-y-2 pl-6">
-              <li>To connect sellers with appropriate recyclers.</li>
-              <li>To send critical transactional notifications (e.g., bid approvals, pickup schedules).</li>
-              <li>To maintain a safe, trusted bidding environment.</li>
-            </ul>
           </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-gray-950 dark:text-white">3. Data Sharing</h2>
-            <p className="mt-3 leading-relaxed">
-              We do not sell your personal information to third parties. Information is only shared between a buyer and a seller once a bid has been explicitly approved, to allow for the coordination of physical logistics.
+          <section className="space-y-3 border-t border-slate-100 pt-8 dark:border-slate-800/80">
+            <div className="flex items-center gap-3 text-slate-950 dark:text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                <Eye className="h-5 w-5" />
+              </div>
+              <h2 className="text-xl font-bold">3. Third-Party Sharing Rules</h2>
+            </div>
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+              E-WasteMart never sells user data to advertisers or data brokers. Authorized CPCB/SPCB recycling partners receive dispatch manifests solely when a bid is finalized to comply with national hazardous material transport standards.
             </p>
           </section>
         </div>
@@ -41,3 +65,4 @@ export default function PrivacyPage() {
     </main>
   );
 }
+

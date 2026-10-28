@@ -19,6 +19,6 @@ export const siteConfig = {
     { label: "Partners", href: "/collaborators" },
     { label: "About", href: "/about-us" },
     { label: "Profile", href: "/profile" },
-    { label: "Settings", href: "/settingtab" },
+    { label: "Settings", href: "/settings" },
   ],
 };

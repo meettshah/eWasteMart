@@ -20,13 +20,11 @@ const LoginSchema = new Schema({
         enum: ["pending", "user", "bulk_seller", "recycler", "enterprise"],
         default: "pending",
     },
-<<<<<<< HEAD
     tokenBalance: {
         type: Number,
         min: 0,
         default: 100000,
     },
-=======
     isEmailVerified: {
         type: Boolean,
         default: false,
@@ -47,7 +45,6 @@ const LoginSchema = new Schema({
         email: { type: Boolean, default: true },
         inApp: { type: Boolean, default: true }
     }
->>>>>>> 7b313d6bd5c597c85af9548a1948d498a8b8bb86
 },
 {
     timestamps: true,

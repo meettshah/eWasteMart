@@ -42,7 +42,13 @@ const bidSchema = new Schema(
       amount: { type: Number },
       message: { type: String },
       status: { type: String, enum: ["pending", "accepted", "rejected"] },
-    }
+    },
+    // Soft Computing: Fuzzy Logic bid fairness score (Feature 2A)
+    fuzzyFairness: {
+      score: { type: Number, default: null },
+      label: { type: String, default: null },
+      color: { type: String, default: null },
+    },
   },
   { timestamps: true }
 );

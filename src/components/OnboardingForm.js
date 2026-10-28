@@ -4,14 +4,34 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Button } from "@nextui-org/react";
-import { BadgeCheck, Building2, Factory, UserRound } from "lucide-react";
+import { BadgeCheck, Building2, Factory, UserRound, ArrowRight, Check } from "lucide-react";
+import { motion } from "framer-motion";
 
 const roles = [
-  { value: "user", title: "Individual seller", text: "Sell household e-waste lots.", icon: UserRound },
-  { value: "bulk_seller", title: "Bulk seller", text: "List office or industry lots.", icon: Building2 },
-  { value: "recycler", title: "Recycler", text: "Bid on open e-waste lots.", icon: Factory },
-  { value: "enterprise", title: "Enterprise", text: "Run programmes and bid.", icon: BadgeCheck },
+  { 
+    value: "user", 
+    title: "Individual Seller", 
+    text: "Sell household laptops, phones & gadgets with AI pricing.", 
+    icon: UserRound 
+  },
+  { 
+    value: "bulk_seller", 
+    title: "Bulk IT Seller", 
+    text: "List corporate servers, monitors & decommissioned IT assets.", 
+    icon: Building2 
+  },
+  { 
+    value: "recycler", 
+    title: "Authorized Recycler", 
+    text: "Bid on lots, coordinate dispatches & earn green credits.", 
+    icon: Factory 
+  },
+  { 
+    value: "enterprise", 
+    title: "Enterprise Brand", 
+    text: "Manage EPR targets, takeback drives & audit-ready certificates.", 
+    icon: BadgeCheck 
+  },
 ];
 
 const OnboardingForm = () => {
@@ -32,7 +52,6 @@ const OnboardingForm = () => {
       });
 
       if (res.ok) {
-        // Force the session to refresh so NextAuth picks up the new role
         await update({ role: data.role });
         router.push("/home");
         router.refresh();
@@ -48,35 +67,77 @@ const OnboardingForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid gap-3">
-        {roles.map((role) => (
-          <label
-            key={role.value}
-            className={`cursor-pointer rounded-xl border p-4 transition ${
-              selectedRole === role.value
-                ? "border-primary bg-primary/10 ring-1 ring-primary"
-                : "border-gray-200 bg-white hover:border-primary/60 dark:border-gray-800 dark:bg-gray-950"
-            }`}
-          >
-            <input {...register("role", { required: "Please select a role to continue" })} type="radio" value={role.value} className="sr-only" />
-            <div className="flex items-start gap-4">
-              <div className={`mt-0.5 rounded-full p-2 ${selectedRole === role.value ? "bg-primary text-white" : "bg-gray-100 text-gray-500 dark:bg-gray-800"}`}>
-                <role.icon className="h-5 w-5" />
+        {roles.map((role) => {
+          const isSelected = selectedRole === role.value;
+          const Icon = role.icon;
+          return (
+            <label
+              key={role.value}
+              className={`group relative flex cursor-pointer items-start gap-4 rounded-2xl border p-4.5 transition-all duration-200 ${
+                isSelected
+                  ? "border-emerald-500 bg-emerald-500/[0.08] ring-2 ring-emerald-500/20 dark:bg-emerald-500/10"
+                  : "border-slate-200/80 bg-white/60 hover:border-slate-300 dark:border-slate-800/80 dark:bg-slate-900/60 dark:hover:border-slate-700"
+              }`}
+            >
+              <input 
+                {...register("role", { required: "Please select a role to continue" })} 
+                type="radio" 
+                value={role.value} 
+                className="sr-only" 
+              />
+              
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                isSelected 
+                  ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25" 
+                  : "bg-slate-100 text-slate-500 group-hover:text-slate-800 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:text-white"
+              }`}>
+                <Icon className="h-5 w-5" />
               </div>
-              <div>
-                <div className="font-semibold text-gray-950 dark:text-white">{role.title}</div>
-                <div className="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-400">{role.text}</div>
+              
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <div className={`text-sm font-bold ${isSelected ? "text-slate-950 dark:text-white" : "text-slate-800 dark:text-slate-200"}`}>
+                    {role.title}
+                  </div>
+                  {isSelected && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  {role.text}
+                </div>
               </div>
-            </div>
-          </label>
-        ))}
+            </label>
+          );
+        })}
       </div>
-      {errors.role && <p className="text-sm font-medium text-red-600">{errors.role.message}</p>}
 
-      <Button isLoading={loading} type="submit" color="primary" className="h-12 w-full font-semibold">
-        Complete Setup
-      </Button>
+      {errors.role && (
+        <p className="text-xs font-semibold text-rose-500">{errors.role.message}</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading || !selectedRole}
+        className="group relative flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:from-emerald-500 hover:to-teal-500 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <span>Configuring Workspace...</span>
+          </div>
+        ) : (
+          <>
+            <span>Launch E-Waste Workspace</span>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </>
+        )}
+      </button>
     </form>
   );
 };
 
 export default OnboardingForm;
+

@@ -1,79 +1,113 @@
 import Link from "next/link";
-import { BadgeCheck, Leaf, LockKeyhole, Recycle } from "lucide-react";
+import { BadgeCheck, Leaf, LockKeyhole, Recycle, ShieldCheck, ArrowRight, Award, Factory, Users } from "lucide-react";
 
 const principles = [
   {
     icon: Recycle,
-    title: "Circular economy first",
-    text: "Every listing is designed to move electronics toward reuse, refurbishment or compliant recycling.",
+    title: "Circular Economy Priority",
+    text: "Every listing on eWasteMart is channeled toward verified reuse, refurbishment, or environmentally compliant smelting.",
   },
   {
     icon: LockKeyhole,
-    title: "Data-aware disposal",
-    text: "Sellers can document condition and handling needs before recyclers commit to pickup.",
+    title: "Cryptographic Data Sanitization",
+    text: "NIST 800-88 compliant media wiping verification protects sensitive institutional and consumer data before handover.",
   },
   {
     icon: BadgeCheck,
-    title: "Transparent approvals",
-    text: "Bids are visible to the seller, and one approved buyer owns the lot at the accepted price.",
+    title: "Algorithmic Transparency",
+    text: "Mamdani Fuzzy Inference Systems rank bids objectively against real metal scrap indices, preventing predatory quotes.",
   },
   {
     icon: Leaf,
-    title: "Lower landfill impact",
-    text: "The marketplace helps organizations divert electronics from informal disposal channels.",
+    title: "Zero-Landfill Mandate",
+    text: "Official CPCB 2022 compliance guarantees that no hazardous lead, cadmium, or mercury enters informal landfills.",
   },
 ];
 
 export default function About() {
   return (
-    <main className="min-h-screen bg-white px-6 py-12 text-gray-950 dark:bg-gray-950 dark:text-white">
-      <div className="mx-auto max-w-7xl">
-        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">About E-WasteMart</p>
-            <h1 className="mt-4 text-4xl font-bold leading-tight sm:text-5xl">
-              A clearer way to move e-waste from sellers to responsible buyers.
-            </h1>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-gray-600 dark:text-gray-300">
-              E-WasteMart connects individual sellers, bulk sellers, certified recyclers and enterprises through a transparent bidding workflow. The platform keeps roles simple, actions protected and e-waste movement easy to understand.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/marketplace" className="rounded-md bg-primary px-5 py-3 text-center font-semibold text-white">
-                Open marketplace
-              </Link>
-              <Link href="/register" className="rounded-md border border-gray-300 px-5 py-3 text-center font-semibold dark:border-gray-700">
-                Join E-WasteMart
-              </Link>
+    <main className="min-h-screen bg-slate-50/70 px-4 py-8 dark:bg-[#090D14] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-12">
+        
+        {/* Hero Section */}
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-10">
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                <Leaf className="h-3.5 w-3.5" />
+                <span>Our Mission & Architectural Vision</span>
+              </div>
+              <h1 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+                A Transparent Pipeline for Responsible E-Waste Movement.
+              </h1>
+              <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base">
+                eWasteMart was engineered to bridge the trust gap between electronics owners, bulk corporate asset managers, and certified R2/CPCB recycling centers across India. By fusing real-time Computer Vision, Soft Computing, and Generative AI, we make electronics retirement economically rewarding and ecologically verifiable.
+              </p>
+              
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href="/marketplace" className="btn-gradient text-xs">
+                  Enter Bidding Floor <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/register" className="btn-secondary text-xs">
+                  Join the Network
+                </Link>
+              </div>
             </div>
-          </div>
-          <div className="rounded-lg bg-gray-50 p-6 dark:bg-gray-900">
-            <h2 className="text-xl font-semibold">Who uses the platform?</h2>
-            <dl className="mt-5 space-y-4 text-sm">
-              <div>
-                <dt className="font-semibold">Users and bulk sellers</dt>
-                <dd className="mt-1 text-gray-600 dark:text-gray-300">Create e-waste lots and approve the bid that works best.</dd>
+
+            {/* Right Card: Platform Governance */}
+            <div className="lg:col-span-5">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-6 dark:border-slate-800/80 dark:bg-slate-800/40">
+                <div className="flex items-center gap-2 mb-4">
+                  <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <h2 className="font-heading text-base font-bold text-slate-900 dark:text-white">
+                    Platform Stakeholders
+                  </h2>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  <div className="rounded-xl border border-slate-200/60 bg-white p-3.5 dark:border-slate-700/60 dark:bg-slate-900/60">
+                    <strong className="block text-slate-900 dark:text-white">Sellers & Bulk IT Disposers</strong>
+                    <span className="text-slate-500 dark:text-slate-400">Publish lots with photo-grade MobileNet condition analysis and maintain 100% final approval control.</span>
+                  </div>
+                  <div className="rounded-xl border border-slate-200/60 bg-white p-3.5 dark:border-slate-700/60 dark:bg-slate-900/60">
+                    <strong className="block text-slate-900 dark:text-white">Licensed R2 & CPCB Recyclers</strong>
+                    <span className="text-slate-500 dark:text-slate-400">Compete on a level bidding desk with Genetic Algorithm distance-weight matching and instant payouts.</span>
+                  </div>
+                  <div className="rounded-xl border border-slate-200/60 bg-white p-3.5 dark:border-slate-700/60 dark:bg-slate-900/60">
+                    <strong className="block text-slate-900 dark:text-white">ESG & EPR Enterprises</strong>
+                    <span className="text-slate-500 dark:text-slate-400">Meet corporate sustainability statutory quotas with downloadable cryptographic impact ledgers.</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <dt className="font-semibold">Recyclers</dt>
-                <dd className="mt-1 text-gray-600 dark:text-gray-300">Bid on lots that match their facility capabilities and pickup scope.</dd>
-              </div>
-              <div>
-                <dt className="font-semibold">Enterprises</dt>
-                <dd className="mt-1 text-gray-600 dark:text-gray-300">Participate in listings and run brand-oriented recovery programmes.</dd>
-              </div>
-            </dl>
+            </div>
           </div>
         </section>
 
-        <section className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {principles.map((item) => (
-            <div key={item.title} className="rounded-lg border border-gray-200 p-5 dark:border-gray-800">
-              <item.icon className="h-7 w-7 text-primary" />
-              <h2 className="mt-4 font-semibold">{item.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{item.text}</p>
-            </div>
-          ))}
+        {/* 4 Pillars Grid */}
+        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {principles.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={idx}
+                className="flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card dark:border-slate-800 dark:bg-slate-900"
+              >
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-4 font-heading text-base font-bold text-slate-900 dark:text-white">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                    {item.text}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </section>
+
       </div>
     </main>
   );

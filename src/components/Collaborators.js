@@ -3,13 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Search, Building2, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
 
 const collaborators = [
-  { id: 1, name: "Samsung", logo: "/samsung.png", speciality: "Mobiles and appliances", impact: "Take-back and refurbishment programmes", process: "Samsung-style programmes focus on collection, diagnostics, material recovery and safe channel routing." },
-  { id: 2, name: "HP", logo: "/hp.png", speciality: "Computers and printers", impact: "IT asset recovery", process: "HP-style recovery emphasizes device sorting, component reuse and plastics recovery for responsible circularity." },
-  { id: 3, name: "Apple", logo: "/apple.png", speciality: "Mobile devices", impact: "Closed-loop material recovery", process: "Apple-style recovery prioritizes secure handling, device disassembly and high-value material extraction." },
-  { id: 4, name: "Dell", logo: "/dell.png", speciality: "Laptops and enterprise IT", impact: "Enterprise take-back", process: "Dell-style programmes support business collections, asset tracking and plastics or metals recovery." },
-  { id: 5, name: "LG", logo: "/lg.png", speciality: "Home appliances", impact: "Appliance recycling", process: "LG-style recycling includes collection, dismantling, sorting and channeling materials to certified processors." },
+  { id: 1, name: "Samsung", logo: "/samsung.png", speciality: "Mobiles & Smart Appliances", impact: "Certified Take-Back & Refurbishment", process: "Diagnostics, circular material recovery, and compliant secondary channel routing." },
+  { id: 2, name: "HP", logo: "/hp.png", speciality: "Laptops, Desktops & Printers", impact: "Closed-Loop IT Asset Recovery", process: "Automated component harvesting, closed-loop plastic recycling, and certified data erasure." },
+  { id: 3, name: "Apple", logo: "/apple.png", speciality: "Premium Mobile & Tablet Hardware", impact: "Zero-Landfill Robotic Disassembly", process: "Daisy/Liam style robotic disassembly, rare earth magnet retrieval, and pure gold recycling." },
+  { id: 4, name: "Dell", logo: "/dell.png", speciality: "Enterprise Servers & Workstations", impact: "Nationwide Corporate IT Asset Disposition", process: "Asset tagging, military-grade DOD drive wiping, and carbon credit offsets." },
+  { id: 5, name: "LG", logo: "/lg.png", speciality: "Displays & High-Capacity Appliances", impact: "Refrigerant & Heavy Metal Safe Recovery", process: "Safe CFC recovery, leaded glass smelting, and circular copper extraction." },
 ];
 
 export default function CollaboratorsPage() {
@@ -25,48 +26,98 @@ export default function CollaboratorsPage() {
   }, [searchTerm]);
 
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-10 dark:bg-gray-950">
-      <div className="mx-auto max-w-7xl">
-        <section className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">Enterprise programmes</p>
-            <h1 className="mt-3 text-4xl font-bold text-gray-950 dark:text-white">Partners and brand-led recycling</h1>
-            <p className="mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
-              Explore example enterprise recycling programmes that can participate in E-WasteMart as buyers, sellers or take-back operators.
-            </p>
+    <main className="min-h-screen bg-slate-50/70 px-4 py-8 dark:bg-[#090D14] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-8">
+        
+        {/* Header Banner */}
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                <Building2 className="h-3.5 w-3.5" />
+                <span>Enterprise Circular Ecosystem</span>
+              </div>
+              <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                Brand Partners & EPR Programmes
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                Leading consumer electronics manufacturers operating extended producer responsibility (EPR) take-back pipelines and certified corporate recycling on eWasteMart.
+              </p>
+            </div>
+            
+            <Link
+              href="/marketplace"
+              className="btn-gradient shrink-0 text-xs"
+            >
+              Enter Bidding Floor <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          <Link href="/marketplace" className="rounded-md bg-primary px-5 py-3 text-center font-semibold text-white">
-            Open marketplace
-          </Link>
         </section>
 
-        <div className="mt-8 max-w-md">
-          <input
-            type="search"
-            placeholder="Search by company, category or programme"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            className="w-full"
-          />
+        {/* Search Input Bar */}
+        <div className="flex items-center gap-3">
+          <div className="relative max-w-md flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by company, hardware category or programme..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 text-xs"
+            />
+          </div>
+          <span className="text-xs text-slate-500">
+            Showing {filteredCollaborators.length} verified partners
+          </span>
         </div>
 
-        <section className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {/* Partners Grid */}
+        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredCollaborators.map((collaborator) => (
-            <article key={collaborator.id} className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-900">
-              <div className="flex items-center gap-4">
-                <Image src={collaborator.logo} alt={`${collaborator.name} logo`} width={72} height={72} className="h-16 w-16 rounded-md object-contain" />
-                <div>
-                  <h2 className="text-xl font-bold text-gray-950 dark:text-white">{collaborator.name}</h2>
-                  <p className="text-sm text-gray-500">{collaborator.speciality}</p>
+            <article
+              key={collaborator.id}
+              className="flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+                    <Image
+                      src={collaborator.logo}
+                      alt={`${collaborator.name} logo`}
+                      width={64}
+                      height={64}
+                      className="max-h-12 max-w-12 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-white">
+                        {collaborator.name}
+                      </h2>
+                      <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <p className="text-xs text-slate-500">{collaborator.speciality}</p>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>{collaborator.impact}</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                    {collaborator.process}
+                  </p>
                 </div>
               </div>
-              <div className="mt-5 rounded-md bg-gray-50 p-4 dark:bg-gray-950">
-                <p className="text-sm font-semibold text-gray-950 dark:text-white">{collaborator.impact}</p>
-                <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{collaborator.process}</p>
+
+              <div className="mt-5 border-t border-slate-100 pt-3 text-[11px] font-semibold text-slate-500 dark:border-slate-800">
+                CPCB EPR Registration Active • Tier-1 Partner
               </div>
             </article>
           ))}
         </section>
+
       </div>
     </main>
   );

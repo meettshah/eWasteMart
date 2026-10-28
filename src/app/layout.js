@@ -1,5 +1,18 @@
 import "./globals.css"
 import Providers from "@/providers/Providers";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
+
+const sans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const heading = Outfit({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+});
 
 export const metadata = {
   title: {
@@ -53,8 +66,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
+    <html lang="en" className={`${sans.variable} ${heading.variable}`} suppressHydrationWarning>
+      <body className="font-sans" suppressHydrationWarning>
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
           {children}
         </Providers>

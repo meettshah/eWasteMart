@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { mongooseConnect } from "@/lib/mongoose";
 import Login from "@/models/LoginModel";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export async function PATCH(req) {
     const session = await getServerSession(authOptions);

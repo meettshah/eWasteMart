@@ -10,117 +10,216 @@ import { Avatar } from "@nextui-org/react";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "./theme-switch";
 import NotificationBell from "./NotificationBell";
+import { 
+  LayoutDashboard, 
+  Store, 
+  Truck, 
+  Wallet, 
+  Factory, 
+  Building2, 
+  Info, 
+  User, 
+  Settings, 
+  LogOut, 
+  ChevronDown, 
+  Menu, 
+  X,
+  ShieldCheck
+} from "lucide-react";
 
-const roleLabels = {
-  user: "Individual seller",
-  bulk_seller: "Bulk seller",
-  recycler: "Recycler",
-  enterprise: "Enterprise",
+const roleConfig = {
+  user: { label: "Individual Seller", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" },
+  bulk_seller: { label: "Bulk Seller", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20" },
+  recycler: { label: "Certified Recycler", color: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20" },
+  enterprise: { label: "Enterprise Partner", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20" },
+  pending: { label: "Verification Pending", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" },
+};
+
+const navIcons = {
+  "/home": LayoutDashboard,
+  "/marketplace": Store,
+  "/pickups": Truck,
+  "/payments": Wallet,
+  "/recyclers": Factory,
+  "/collaborators": Building2,
+  "/about-us": Info,
 };
 
 export default function Nav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user;
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const roleMeta = roleConfig[user?.role] || roleConfig.user;
 
   return (
     <>
-      <nav className="glass-nav flex h-16 w-full items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <Link href="/home" className="flex items-center gap-3">
-            <Image src="/logo.png" width={36} height={36} className="h-9 w-9" alt="E-WasteMart logo" />
-            <span className="text-gradient font-bold">E-WasteMart</span>
-          </Link>
-        </div>
-
-        <div className="hidden lg:flex items-center gap-5 justify-center flex-1 ml-10">
-          {siteConfig.navItems.map((item) => (
-            <Link
-              key={item.href}
-              className={`text-sm font-medium transition-colors ${
-                pathname === item.href ? "text-primary" : "text-gray-700 hover:text-primary dark:text-gray-200"
-              }`}
-              href={item.href}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-4 justify-end">
-          <ThemeSwitch />
-          <NotificationBell />
+      <nav className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-[#090D14]/85 shadow-xs">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 sm:py-4 lg:px-8">
           
-          <div className="relative">
-            <button 
-              className="flex items-center gap-3 rounded-xl px-2 py-1 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-              onClick={() => setIsMenuOpen((prev) => (prev === 'profile' ? false : 'profile'))}
-            >
-              <Avatar size="sm" src="/profile1.png" name={user?.name || "User"} />
-              <span className="hidden sm:block">
-                <span className="block text-sm font-semibold text-gray-950 dark:text-white">{user?.name || "Account"}</span>
-                <span className="block text-xs text-gray-500">{roleLabels[user?.role] || "Member"}</span>
+          {/* Brand */}
+          <Link href="/home" className="flex items-center gap-2.5 transition-transform active:scale-95">
+            <Image src="/logo.png" width={36} height={36} alt="eWasteMart Logo" className="h-9 w-9 object-contain" priority />
+            <div className="flex flex-col">
+              <span className="font-heading text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                eWaste<span className="text-emerald-600 dark:text-emerald-400">Mart</span>
               </span>
-            </button>
-            
-            <AnimatePresence>
-              {isMenuOpen === 'profile' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 top-full mt-2 w-48 rounded-xl glass-card py-1 z-50"
-                >
-                  <Link href="/profile" className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-primary/10 hover:text-primary dark:text-gray-200 dark:hover:bg-primary/20" onClick={() => setIsMenuOpen(false)}>Profile</Link>
-                  <Link href="/settings" className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-primary/10 hover:text-primary dark:text-gray-200 dark:hover:bg-primary/20" onClick={() => setIsMenuOpen(false)}>Settings</Link>
-                  <div className="my-1 h-px w-full bg-gray-200/50 dark:bg-gray-800/50" />
-                  <button 
-                    className="block w-full text-left px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10" 
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                  >
-                    Logout
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          
-          <button 
-            className="lg:hidden p-2 text-gray-700 dark:text-gray-200"
-            onClick={() => setIsMenuOpen((prev) => (prev === 'mobile' ? false : 'mobile'))}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </nav>
+              <span className="text-[10px] font-medium tracking-wider uppercase text-slate-500 dark:text-slate-400">
+                Workspace
+              </span>
+            </div>
+          </Link>
 
-      <AnimatePresence>
-        {isMenuOpen === 'mobile' && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="fixed inset-x-0 top-16 z-40 glass-nav border-t-0 p-6 shadow-lg lg:hidden"
-          >
-            <div className="flex flex-col gap-4">
-              {siteConfig.navMenuItems.map((item) => (
+          {/* Center Navigation Links (Fluent Pill Segment) */}
+          <div className="hidden xl:flex items-center gap-1 rounded-full border border-slate-200/80 bg-slate-50/70 p-1 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/60">
+            {siteConfig.navItems.map((item) => {
+              const Icon = navIcons[item.href] || Store;
+              const isActive = pathname === item.href;
+              return (
                 <Link
                   key={item.href}
-                  className={pathname === item.href ? "font-semibold text-primary" : "text-gray-800 font-medium hover:text-primary dark:text-gray-100"}
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
+                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                    isActive
+                      ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/50"
+                  }`}
                 >
+                  <Icon className={`h-3.5 w-3.5 ${isActive ? "text-emerald-600 dark:text-emerald-400" : "opacity-70"}`} />
                   {item.label}
                 </Link>
-              ))}
+              );
+            })}
+          </div>
+
+          {/* Right Controls */}
+          <div className="flex items-center gap-3">
+            <ThemeSwitch />
+            <NotificationBell />
+
+            {/* User Profile Pill Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center gap-2.5 rounded-2xl border border-slate-200/80 bg-white/70 p-1.5 pr-3 text-left transition-all hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900/70 dark:hover:border-slate-700"
+              >
+                <Avatar
+                  size="sm"
+                  src="/profile1.png"
+                  name={user?.name || "User"}
+                  className="h-8 w-8 ring-1 ring-emerald-500/30"
+                />
+                <div className="hidden sm:flex flex-col">
+                  <span className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">
+                    {user?.name || "Account"}
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">
+                    {roleMeta.label}
+                  </span>
+                </div>
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 top-full mt-2 w-60 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-[#0f172a]/95 z-50"
+                  >
+                    <div className="border-b border-slate-100 dark:border-slate-800/80 px-3 py-2.5 mb-1">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {user?.name || "My Account"}
+                      </p>
+                      <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+                      <div className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${roleMeta.color}`}>
+                        <ShieldCheck className="h-3 w-3" />
+                        {roleMeta.label}
+                      </div>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <Link
+                        href="/profile"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white transition-colors"
+                      >
+                        <User className="h-4 w-4 text-slate-400" />
+                        Profile & Verification
+                      </Link>
+                      <Link
+                        href="/settings"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white transition-colors"
+                      >
+                        <Settings className="h-4 w-4 text-slate-400" />
+                        Account Settings
+                      </Link>
+                    </div>
+
+                    <div className="my-1.5 h-px bg-slate-100 dark:bg-slate-800" />
+
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 xl:hidden"
+              aria-label="Toggle Menu"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur-xl dark:border-slate-800 dark:bg-[#090D14]/95 xl:hidden"
+            >
+              <div className="grid grid-cols-2 gap-2">
+                {siteConfig.navMenuItems.map((item) => {
+                  const Icon = navIcons[item.href] || Store;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+                        isActive
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                          : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 opacity-75" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
     </>
   );
 }
