@@ -1,37 +1,88 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { ArrowRight, Building2, Factory, ListPlus, Recycle, Scale, UserRound } from "lucide-react";
+import { 
+  ArrowRight, 
+  Building2, 
+  Factory, 
+  Recycle, 
+  Scale, 
+  UserRound, 
+  TrendingUp, 
+  Sparkles, 
+  ShieldCheck, 
+  Truck, 
+  Wallet,
+  Clock,
+  Layers,
+  Award,
+  Zap,
+  Leaf
+} from "lucide-react";
 
 const roleGuidance = {
   user: {
-    title: "Sell individual e-waste",
-    body: "Create listings for phones, laptops, chargers and other household electronics.",
-    action: "Create a listing",
+    title: "Household & Personal Gadgets",
+    body: "Create listings for used phones, laptops, chargers, and appliances with automatic AI scrap pricing and secure doorstep OTP pickups.",
+    action: "Create a Listing",
+    href: "/marketplace",
+    badge: "Verified Individual Seller",
   },
   bulk_seller: {
-    title: "Move bulk lots faster",
-    body: "Publish larger office, school, warehouse or industrial e-waste lots for competitive bids.",
-    action: "List a bulk lot",
+    title: "Bulk IT & Decommissioning Desk",
+    body: "Liquidate office, school, or warehouse e-waste lots in pallets. Invite certified recyclers to submit competitive sealed bids.",
+    action: "List Pallet Lot",
+    href: "/marketplace",
+    badge: "Enterprise Bulk Disposer",
   },
   recycler: {
-    title: "Find lots ready for recycling",
-    body: "Browse open listings, place bids and win approved lots from sellers.",
-    action: "Browse listings",
+    title: "Circular Sourcing Desk",
+    body: "Browse vetted e-waste streams, inspect automated MobileNet condition scans, place Mamdani-rated fair bids, and win direct pickups.",
+    action: "Browse Open Bids",
+    href: "/marketplace",
+    badge: "CPCB Certified Recycler",
   },
   enterprise: {
-    title: "Run a recycling programme",
-    body: "List programme collections or bid on lots aligned with your brand recovery process.",
-    action: "Open marketplace",
+    title: "EPR Brand Take-Back Console",
+    body: "Run extended producer responsibility collections, audit vendor compliance, and download cryptographic ESG sustainability reports.",
+    action: "Launch EPR Programme",
+    href: "/marketplace",
+    badge: "Corporate ESG Partner",
   },
 };
 
 const quickActions = [
-  { title: "Marketplace", text: "Create listings, place bids and approve buyers.", href: "/marketplace", icon: Scale },
-  { title: "Certified recyclers", text: "Review recycler capabilities and processing policies.", href: "/recyclers", icon: Factory },
-  { title: "Enterprise partners", text: "Explore brand-led take-back and recycling programmes.", href: "/collaborators", icon: Building2 },
+  { 
+    title: "Bidding Desk", 
+    text: "Create listings, review Mamdani fuzzy offers, and approve certified buyers.", 
+    href: "/marketplace", 
+    icon: Scale,
+    color: "from-emerald-500/10 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+  },
+  { 
+    title: "Doorstep Pickups", 
+    text: "Track dispatch logistics, manage courier manifests, and verify 6-digit OTPs.", 
+    href: "/pickups", 
+    icon: Truck,
+    color: "from-blue-500/10 to-sky-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+  },
+  { 
+    title: "Payments & Escrow", 
+    text: "Review instant bank payouts, token rewards, and transaction receipts.", 
+    href: "/payments", 
+    icon: Wallet,
+    color: "from-purple-500/10 to-indigo-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+  },
+  { 
+    title: "Recycler Directory", 
+    text: "Review licensed R2/CPCB recyclers, distance radii, and processing policies.", 
+    href: "/recyclers", 
+    icon: Factory,
+    color: "from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+  },
 ];
 
 export default function HomePage() {
@@ -39,111 +90,194 @@ export default function HomePage() {
   const role = session?.user?.role || "user";
   const guidance = roleGuidance[role] || roleGuidance.user;
 
-  // Mock data for Environmental Impact (would normally fetch from DB)
-  const impactData = {
-    divertedKg: 1450,
-    co2SavedKg: 2100,
-    metalsRecoveredKg: 320,
-    badges: ["🌱 Eco-Starter", "🥉 Bronze Recycler"],
-  };
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50/50 px-6 py-8 dark:bg-gray-950">
+    <main className="min-h-screen bg-slate-50/60 px-4 py-8 dark:bg-[#090D14] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
+        
+        {/* ─── Executive Welcome Banner ──────────────────────────── */}
         <motion.section 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="glass-card rounded-2xl p-6 md:p-8"
+          transition={{ duration: 0.4 }}
+          className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-8"
         >
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-primary">Dashboard</p>
-              <h1 className="mt-3 text-4xl font-bold text-gray-950 dark:text-white">
-                Welcome back, <span className="text-gradient">{session?.user?.name || "Member"}</span>.
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
+            <div className="lg:col-span-8">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {guidance.badge}
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                  • Active Session
+                </span>
+              </div>
+
+              <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                {greeting}, <span className="text-gradient">{session?.user?.name || "Member"}</span>.
               </h1>
-              <p className="mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-                Your role controls what you can do across the platform. Use this dashboard to jump into the right workflow.
+              
+              <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base">
+                Welcome to your circular e-waste workspace. Manage your listings, inspect bids, monitor carbon savings, and schedule compliant disposals.
               </p>
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <Link href="/marketplace" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40">
-                  {guidance.action} <ArrowRight className="h-5 w-5" />
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link 
+                  href={guidance.href} 
+                  className="btn-gradient text-sm"
+                >
+                  {guidance.action} <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link href="/profile" className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white/50 px-6 py-3.5 font-semibold text-gray-900 transition-all hover:bg-white dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:hover:bg-gray-800">
-                  View profile
+                <Link 
+                  href="/profile" 
+                  className="btn-secondary text-sm"
+                >
+                  View Profile & Documents
                 </Link>
               </div>
             </div>
-            <motion.div 
-              whileHover={{ scale: 1.02 }}
-              className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/80"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  {role === "recycler" ? <Recycle className="h-7 w-7" /> : role === "enterprise" ? <Building2 className="h-7 w-7" /> : <UserRound className="h-7 w-7" />}
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-950 dark:text-white">{guidance.title}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{guidance.body}</p>
+
+            {/* Role Context Tile */}
+            <div className="lg:col-span-4">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-5 dark:border-slate-800/80 dark:bg-slate-800/50">
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    {role === "recycler" ? <Recycle className="h-5 w-5" /> : role === "enterprise" ? <Building2 className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{guidance.title}</h2>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                      {guidance.body}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </motion.section>
 
-        {/* Environmental Impact Dashboard */}
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <h2 className="mb-4 text-2xl font-bold text-gray-950 dark:text-white">Your Environmental Impact</h2>
-          <div className="grid gap-5 md:grid-cols-3">
-            <motion.div whileHover={{ y: -4 }} className="glass-card rounded-2xl p-6 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                <Recycle className="h-6 w-6" />
-              </div>
-              <h3 className="mt-4 text-3xl font-black text-gray-950 dark:text-white">{impactData.divertedKg} <span className="text-lg font-medium text-gray-500">kg</span></h3>
-              <p className="mt-1 font-medium text-gray-600 dark:text-gray-400">E-Waste Diverted</p>
-            </motion.div>
-            <motion.div whileHover={{ y: -4 }} className="glass-card rounded-2xl p-6 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                <Scale className="h-6 w-6" />
-              </div>
-              <h3 className="mt-4 text-3xl font-black text-gray-950 dark:text-white">{impactData.co2SavedKg} <span className="text-lg font-medium text-gray-500">kg</span></h3>
-              <p className="mt-1 font-medium text-gray-600 dark:text-gray-400">CO₂ Emissions Saved</p>
-            </motion.div>
-            <motion.div whileHover={{ y: -4 }} className="glass-card rounded-2xl p-6 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
-                <Factory className="h-6 w-6" />
-              </div>
-              <h3 className="mt-4 text-3xl font-black text-gray-950 dark:text-white">{impactData.metalsRecoveredKg} <span className="text-lg font-medium text-gray-500">kg</span></h3>
-              <p className="mt-1 font-medium text-gray-600 dark:text-gray-400">Toxic Metals Recovered</p>
-            </motion.div>
-          </div>
-        </motion.section>
-
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="grid gap-5 md:grid-cols-3"
-        >
-          {quickActions.map((action, i) => (
-            <Link key={action.href} href={action.href}>
-              <motion.div 
-                whileHover={{ y: -5 }}
-                className="glass-card h-full rounded-2xl p-6 transition-shadow hover:shadow-xl dark:hover:shadow-primary/5"
+        {/* ─── Metric & Environmental Impact Strip ────────────────── */}
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              title: "E-Waste Diverted",
+              value: "1,450",
+              unit: "kg",
+              change: "+18% this month",
+              icon: Recycle,
+              color: "text-emerald-600 dark:text-emerald-400",
+              bg: "bg-emerald-500/10",
+            },
+            {
+              title: "CO₂ Mitigated",
+              value: "2,100",
+              unit: "kg CO₂e",
+              change: "≈ 105 trees saved",
+              icon: Leaf,
+              color: "text-teal-600 dark:text-teal-400",
+              bg: "bg-teal-500/10",
+            },
+            {
+              title: "Precious Metals Saved",
+              value: "320",
+              unit: "kg",
+              change: "Gold, Copper & Silicon",
+              icon: Award,
+              color: "text-amber-600 dark:text-amber-400",
+              bg: "bg-amber-500/10",
+            },
+            {
+              title: "Green ESG Credits",
+              value: "100,000",
+              unit: "tokens",
+              change: "Redeemable in escrow",
+              icon: Zap,
+              color: "text-blue-600 dark:text-blue-400",
+              bg: "bg-blue-500/10",
+            },
+          ].map((m, idx) => {
+            const Icon = m.icon;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.08 }}
+                className="metric-card"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <action.icon className="h-6 w-6" />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    {m.title}
+                  </span>
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${m.bg} ${m.color}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
                 </div>
-                <h2 className="mt-5 text-xl font-bold text-gray-950 dark:text-white">{action.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{action.text}</p>
+                <div className="mt-3 flex items-baseline gap-1.5">
+                  <span className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    {m.value}
+                  </span>
+                  <span className="text-xs font-medium text-slate-500">
+                    {m.unit}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                  <TrendingUp className="h-3 w-3" />
+                  <span>{m.change}</span>
+                </div>
               </motion.div>
-            </Link>
-          ))}
-        </motion.section>
+            );
+          })}
+        </section>
+
+        {/* ─── Fast Launcher Cards ─────────────────────────────────── */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-white">
+                Workspace Modules
+              </h2>
+              <p className="text-xs text-slate-500">
+                Direct shortcuts to active trading, logistics, and verification tools
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {quickActions.map((action, i) => {
+              const Icon = action.icon;
+              return (
+                <Link key={action.href} href={action.href} className="group">
+                  <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 group-hover:-translate-y-1 group-hover:border-slate-300 group-hover:shadow-md dark:border-slate-800 dark:bg-slate-900/80">
+                    <div>
+                      <div className={`inline-flex rounded-xl border p-3 ${action.color}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="mt-4 font-heading text-base font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {action.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                        {action.text}
+                      </p>
+                    </div>
+                    <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span>Open Module</span>
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
       </div>
     </main>
   );

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { mongooseConnect } from "@/lib/mongoose";
 import Listing from "@/models/ListingModel";
+import { evaluateBidFairness } from "@/lib/fuzzy/priceEvaluator";
 
 const BIDDER_ROLES = ["recycler", "enterprise"];
 
@@ -30,30 +31,44 @@ export async function POST(req, { params }) {
     return NextResponse.json({ message: "Please enter a valid bid amount." }, { status: 400 });
   }
 
-  listing.bids.push({
-    bidderId: session.user.id,
-    bidderName: session.user.name,
-    bidderEmail: session.user.email,
-    bidderRole: session.user.role,
+  // --- Soft Computing: Fuzzy Logic Fairness Evaluation (Feature 2A) ---
+  // Evaluate bid fairness using Mamdani fuzzy inference before storing
+  const fairness = evaluateBidFairness(
     amount,
-    message: body.message || "",
+    listing.askingPrice,
+    listing.condition,
+    listing.quantity
+  );
+
+  listing.bids.push({
+    bidderId:     session.user.id,
+    bidderName:   session.user.name,
+    bidderEmail:  session.user.email,
+    bidderRole:   session.user.role,
+    amount,
+    message:      body.message || "",
+    fuzzyFairness: {
+      score: fairness.score,
+      label: fairness.label,
+      color: fairness.color,
+    },
   });
   await listing.save();
 
   try {
     const { dispatchNotification } = await import("@/lib/notifications");
     await dispatchNotification({
-      userId: listing.sellerId,
+      userId:    listing.sellerId,
       userEmail: listing.sellerEmail,
-      title: "New Bid Received",
-      message: `${session.user.name} placed a bid of Rs. ${amount.toLocaleString("en-IN")} on your listing "${listing.title}".`,
-      type: "BID",
-      link: "/marketplace",
-      channels: ["IN_APP", "EMAIL"]
+      title:     "New Bid Received",
+      message:   `${session.user.name} placed a bid of Rs. ${amount.toLocaleString("en-IN")} on your listing "${listing.title}". Fairness: ${fairness.label} (${fairness.score}/100).`,
+      type:      "BID",
+      link:      "/marketplace",
+      channels:  ["IN_APP", "EMAIL"],
     });
   } catch (err) {
     console.error("Notification error:", err);
   }
 
-  return NextResponse.json(listing, { status: 201 });
+  return NextResponse.json({ ...listing.toObject(), _fuzzyFairness: fairness }, { status: 201 });
 }

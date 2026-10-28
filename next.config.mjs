@@ -10,6 +10,7 @@ const nextConfig = {
             }
         ],
     },
+    transpilePackages: ['@nextui-org/react'],
 };
 
 export default nextConfig;

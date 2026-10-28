@@ -1,7 +1,7 @@
 import { mongooseConnect } from "@/lib/mongoose";
 import Login from "@/models/LoginModel";
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export async function POST(req) {
     try {
