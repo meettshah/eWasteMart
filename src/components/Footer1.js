@@ -1,12 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ShieldCheck, Heart, Leaf } from "lucide-react";
+import { Leaf } from "lucide-react";
 
 const footerNavigation = {
   solutions: [
     { name: "Marketplace Bidding Desk", href: "/marketplace" },
     { name: "Certified Recycler Directory", href: "/recyclers" },
-    { name: "Enterprise EPR Partners", href: "/collaborators" },
     { name: "Doorstep OTP Pickups", href: "/pickups" },
   ],
   intelligence: [
@@ -14,19 +13,10 @@ const footerNavigation = {
     { name: "Mamdani Fuzzy Bid Rating", href: "/marketplace" },
     { name: "Genetic Recycler Matcher", href: "/marketplace" },
     { name: "MobileNet Device Scanner", href: "/marketplace" },
-    { name: "ESG Impact Certificate", href: "/marketplace" },
-  ],
-  company: [
-    { name: "About E-WasteMart", href: "/about-us" },
-    { name: "Environmental Guidelines", href: "/about-us" },
-    { name: "Create Free Account", href: "/register" },
-    { name: "Portal Sign In", href: "/login" },
   ],
   legal: [
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "/terms" },
-    { name: "CPCB 2022 Compliance", href: "/about-us" },
-    { name: "Data Security Assurance", href: "/about-us" },
   ],
 };
 
@@ -45,7 +35,7 @@ export default function Footer1() {
                   eWaste<span className="text-emerald-600 dark:text-emerald-400">Mart</span>
                 </span>
                 <span className="text-[10px] font-medium tracking-wider uppercase text-slate-500">
-                  Circular Economy Exchange
+                  Recycle, Reuse & Repeat
                 </span>
               </div>
             </Link>
@@ -53,11 +43,6 @@ export default function Footer1() {
             <p className="mt-4 max-w-sm text-xs leading-relaxed text-slate-600 dark:text-slate-400">
               India&apos;s role-based marketplace uniting households, bulk disposers, certified recyclers and ESG enterprises for compliant, zero-landfill electronic asset liquidation.
             </p>
-
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>All Systems Operational & Certified</span>
-            </div>
           </div>
 
           {/* Solutions Column */}

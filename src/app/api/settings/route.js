@@ -1,8 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Login from "@/models/LoginModel";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req) {
     const session = await getServerSession(authOptions);
@@ -11,12 +10,31 @@ export async function GET(req) {
     }
 
     try {
-        await mongooseConnect();
-        const user = await Login.findOne({ email: session.user.email }).select("-password");
+        const email = session.user.email?.toLowerCase().trim();
+        const user = await prisma.user.findUnique({
+            where: { email },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                phone: true,
+                address: true,
+                city: true,
+                pincode: true,
+                state: true,
+                tokenBalance: true,
+                isEmailVerified: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
         if (!user) {
             return NextResponse.json({ message: "User not found" }, { status: 404 });
         }
-        return NextResponse.json(user);
+
+        return NextResponse.json({ ...user, _id: user.id });
     } catch (error) {
         console.error("Settings GET Error:", error);
         return NextResponse.json({ message: "Server error" }, { status: 500 });
@@ -32,23 +50,30 @@ export async function PATCH(req) {
     try {
         const body = await req.json();
         
-        // Prevent role and password updates through this general settings route
-        delete body.role;
-        delete body.password;
-        delete body.email; // Don't allow email change for now
+        // Prevent role, password, and email updates through this general settings route
+        const { role, password, email, id, _id, ...safeUpdates } = body;
 
-        await mongooseConnect();
-        const user = await Login.findOneAndUpdate(
-            { email: session.user.email },
-            { $set: body },
-            { new: true }
-        ).select("-password");
+        const user = await prisma.user.update({
+            where: { email: session.user.email.toLowerCase().trim() },
+            data: safeUpdates,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                phone: true,
+                address: true,
+                city: true,
+                pincode: true,
+                state: true,
+                tokenBalance: true,
+                isEmailVerified: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
 
-        if (!user) {
-            return NextResponse.json({ message: "User not found" }, { status: 404 });
-        }
-
-        return NextResponse.json(user);
+        return NextResponse.json({ ...user, _id: user.id });
     } catch (error) {
         console.error("Settings PATCH Error:", error);
         return NextResponse.json({ message: "Failed to update settings" }, { status: 500 });

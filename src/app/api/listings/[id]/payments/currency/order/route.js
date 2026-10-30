@@ -2,9 +2,8 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
+import { prisma } from "@/lib/prisma";
 import { getApprovedPaymentContext, jsonError } from "@/lib/paymentSecurity";
-import PaymentTransaction from "@/models/PaymentTransactionModel";
 
 export async function POST(req, { params }) {
   const session = await getServerSession(authOptions);
@@ -18,12 +17,14 @@ export async function POST(req, { params }) {
     return NextResponse.json({ message: "Currency payment gateway is not configured." }, { status: 503 });
   }
 
-  await mongooseConnect();
-  const context = await getApprovedPaymentContext(params.id, session.user);
+  const { id } = await params;
+  const context = await getApprovedPaymentContext(id, session.user);
   if (context.error) return jsonError(NextResponse, context.error);
 
   const { listing, approvedBid, receiver, amount } = context;
-  const existingPaid = await PaymentTransaction.findOne({ listingId: listing._id, status: "paid" });
+  const existingPaid = await prisma.paymentTransaction.findFirst({
+    where: { listingId: listing.id, status: "paid" }
+  });
   if (existingPaid) {
     return NextResponse.json({ message: "This listing is already paid." }, { status: 409 });
   }
@@ -32,45 +33,59 @@ export async function POST(req, { params }) {
   const order = await razorpay.orders.create({
     amount: amount * 100,
     currency: "INR",
-    receipt: `ewm_${listing._id.toString().slice(-10)}_${Date.now()}`,
+    receipt: `ewm_${listing.id.slice(-10)}_${Date.now()}`,
     notes: {
-      listingId: listing._id.toString(),
-      bidId: approvedBid._id.toString(),
+      listingId: listing.id,
+      bidId: approvedBid.id,
       payerEmail: session.user.email,
       receiverEmail: receiver.email,
     },
   });
 
-  await PaymentTransaction.findOneAndUpdate(
-    { listingId: listing._id, method: "currency", status: "initiated" },
-    {
-      listingId: listing._id,
-      bidId: approvedBid._id,
-      payerId: session.user.id,
-      payerEmail: session.user.email,
-      receiverId: receiver._id,
-      receiverEmail: receiver.email,
-      method: "currency",
-      amount,
-      currency: "INR",
-      status: "initiated",
-      provider: "razorpay",
-      providerOrderId: order.id,
-      metadata: { order },
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+  const existingTx = await prisma.paymentTransaction.findFirst({
+    where: { listingId: listing.id, method: "currency", status: "initiated" }
+  });
 
-  listing.payment.status = "processing";
-  listing.payment.method = "currency";
-  listing.payment.amount = amount;
-  await listing.save();
+  if (existingTx) {
+    await prisma.paymentTransaction.update({
+      where: { id: existingTx.id },
+      data: {
+        bidId: approvedBid.id,
+        payerId: session.user.id,
+        payerEmail: session.user.email,
+        receiverId: receiver.id,
+        receiverEmail: receiver.email,
+        amount,
+        currency: "INR",
+        provider: "razorpay",
+        providerOrderId: order.id,
+        metadata: { order },
+      }
+    });
+  } else {
+    await prisma.paymentTransaction.create({
+      data: {
+        listingId: listing.id,
+        bidId: approvedBid.id,
+        payerId: session.user.id,
+        payerEmail: session.user.email,
+        receiverId: receiver.id,
+        receiverEmail: receiver.email,
+        method: "currency",
+        amount,
+        currency: "INR",
+        status: "initiated",
+        provider: "razorpay",
+        providerOrderId: order.id,
+        metadata: { order },
+      }
+    });
+  }
 
   return NextResponse.json({
     orderId: order.id,
     amount: order.amount,
     currency: order.currency,
     keyId,
-    listingId: listing._id,
   });
 }

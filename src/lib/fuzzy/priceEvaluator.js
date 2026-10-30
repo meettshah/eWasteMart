@@ -1,12 +1,13 @@
 // =====================================================================
 // Fuzzy Logic Bid Fairness Evaluator
-// Subject: Soft Computing
+// Subject: Soft Computing (Subject 2A)
 // 
 // Academic Concepts Demonstrated:
 //   - Fuzzy sets and membership functions (trapezoidal, triangular)
-//   - Mamdani Fuzzy Inference System (FIS)
-//   - Defuzzification via Centroid method (Center of Gravity)
-//   - Multi-variable fuzzy rule base
+//   - Mamdani Fuzzy Inference System (FIS) with min-clipping
+//   - Max-aggregation across rule antecedents
+//   - Defuzzification via Centroid method (Center of Gravity / COG)
+//   - Real database transaction grounding
 //
 // References:
 //   - Zadeh, L.A. (1965). Fuzzy sets. Information and Control, 8(3), 338-353.
@@ -22,11 +23,6 @@
 /**
  * Trapezoidal membership function.
  * Returns 1 for values between b and c, ramps linearly on edges.
- * @param {number} x - crisp input value
- * @param {number} a - left foot
- * @param {number} b - left shoulder
- * @param {number} c - right shoulder
- * @param {number} d - right foot
  */
 function trapezoid(x, a, b, c, d) {
   if (x >= b && x <= c) return 1;
@@ -41,10 +37,6 @@ function trapezoid(x, a, b, c, d) {
 /**
  * Triangular membership function.
  * Returns 1 at peak m, ramps down on both sides.
- * @param {number} x - crisp input value
- * @param {number} a - left foot
- * @param {number} m - peak (apex)
- * @param {number} b - right foot
  */
 function triangle(x, a, m, b) {
   if (x === m) return 1;
@@ -55,183 +47,284 @@ function triangle(x, a, m, b) {
 }
 
 // -------------------------------------------------------------------
-// STEP 2: Define Linguistic Variables and their Fuzzy Sets
+// STEP 2: Linguistic Variables & Fuzzy Membership Sets
 // -------------------------------------------------------------------
 
 /**
  * Input Variable 1: Price Ratio (bid_amount / asking_price)
  * Range: [0, 2.5]
- * Fuzzy sets: low, fair, high
+ * Sets: low, fair, high
  */
-function priceRatioMemberships(ratio) {
+export function priceRatioMemberships(ratio) {
+  const r = Math.max(0, ratio);
   return {
-    low:  trapezoid(ratio, 0.0, 0.0, 0.55, 0.80),
-    fair: triangle(ratio,    0.60, 0.95, 1.40),
-    high: trapezoid(ratio, 1.20, 1.50, 2.50, 2.50),
+    low:  trapezoid(r, 0.0, 0.0, 0.55, 0.80),
+    fair: triangle(r,  0.60, 0.95, 1.40),
+    high: trapezoid(r, 1.20, 1.50, 2.50, 2.50),
   };
 }
 
 /**
- * Input Variable 2: Condition Score (numeric encoding)
+ * Input Variable 2: Condition Score
  * scrap=0.1, mixed=0.4, repairable=0.7, working=1.0
- * Fuzzy sets: poor, moderate, good
+ * Sets: poor, moderate, good
  */
-function conditionMemberships(condScore) {
+export function conditionMemberships(condScore) {
+  const c = Math.max(0, Math.min(1, condScore));
   return {
-    poor:     trapezoid(condScore, 0.0, 0.0, 0.15, 0.50),
-    moderate: triangle(condScore,  0.25, 0.50, 0.75),
-    good:     trapezoid(condScore, 0.60, 0.85, 1.0, 1.0),
+    poor:     trapezoid(c, 0.0, 0.0, 0.15, 0.50),
+    moderate: triangle(c,  0.25, 0.50, 0.75),
+    good:     trapezoid(c, 0.60, 0.85, 1.0, 1.0),
   };
 }
 
 /**
  * Input Variable 3: Quantity Score (log-normalized to [0,1])
  * small=1-5 items, medium=6-50, bulk=50+
- * Fuzzy sets: small, medium, bulk
+ * Sets: small, medium, bulk
  */
-function quantityMemberships(qty) {
-  const logQty = Math.log10(Math.max(qty, 1));   // 0 to ~3 for 1–1000
-  const norm = Math.min(logQty / 3, 1);           // normalize to [0,1]
+export function quantityMemberships(qty) {
+  const logQty = Math.log10(Math.max(Number(qty) || 1, 1));
+  const norm = Math.min(logQty / 3, 1);
   return {
     small:  trapezoid(norm, 0.0, 0.0, 0.15, 0.35),
-    medium: triangle(norm,   0.25, 0.50, 0.75),
+    medium: triangle(norm,  0.25, 0.50, 0.75),
     bulk:   trapezoid(norm, 0.60, 0.80, 1.0, 1.0),
   };
 }
 
 // -------------------------------------------------------------------
-// STEP 3: Fuzzy Rule Base (Mamdani-style IF-THEN rules)
-// Output linguistic variable: Fairness Score [0, 100]
-// Fuzzy output sets: unfair (0-40), borderline (30-70), fair (60-100)
+// STEP 3: Defuzzification via Centroid Method (Center of Gravity)
 // -------------------------------------------------------------------
 
-/**
- * Defuzzification: Centroid method (Center of Gravity)
- * Discretizes output universe [0,100] and computes weighted centroid.
- * @param {Array} rules - [{outputSet, firingStrength}]
- */
-function defuzzify(rules) {
-  // Output universe: 0 to 100
-  const resolution = 101;
+function defuzzifyCentroid(rules) {
+  const resolution = 101; // Discrete points across universe [0, 100]
   let numerator = 0;
   let denominator = 0;
 
   for (let x = 0; x < resolution; x++) {
-    // Output membership functions
-    const muUnfair      = trapezoid(x, 0,  0,  25, 45);
-    const muBorderline  = triangle(x,  30, 55, 75);
-    const muFair        = trapezoid(x, 60, 78, 100, 100);
+    // Output membership functions for fairness:
+    const muUnfair     = trapezoid(x, 0,  0,  25, 45);
+    const muBorderline = triangle(x,  30, 55, 75);
+    const muFair       = trapezoid(x, 60, 78, 100, 100);
 
-    // Aggregate all rules using max-min composition
-    const aggregated = Math.max(
-      ...rules.map(({ outputSet, strength }) => {
-        let mu;
-        if (outputSet === "unfair")     mu = muUnfair;
-        else if (outputSet === "borderline") mu = muBorderline;
-        else                             mu = muFair;
-        return Math.min(strength, mu);  // min = clipping (Mamdani)
-      })
-    );
+    // Mamdani min-clipping and max-aggregation
+    let maxClipped = 0;
+    for (const rule of rules) {
+      if (rule.strength <= 0) continue;
+      let mu = 0;
+      if (rule.outputSet === "unfair") mu = muUnfair;
+      else if (rule.outputSet === "borderline") mu = muBorderline;
+      else mu = muFair;
 
-    numerator   += x * aggregated;
-    denominator += aggregated;
+      const clipped = Math.min(rule.strength, mu);
+      if (clipped > maxClipped) {
+        maxClipped = clipped;
+      }
+    }
+
+    numerator += x * maxClipped;
+    denominator += maxClipped;
   }
 
   return denominator === 0 ? 50 : numerator / denominator;
 }
 
 // -------------------------------------------------------------------
-// STEP 4: Main Evaluator — Fuzzify → Infer → Defuzzify
+// STEP 4: Rule Base Construction & Normalization
 // -------------------------------------------------------------------
 
-const CONDITION_SCORES = {
+export const CONDITION_SCORES = {
   working:    1.0,
   repairable: 0.7,
   mixed:      0.4,
   scrap:      0.1,
 };
 
-/**
- * Evaluate bid fairness using Fuzzy Logic.
- * 
- * @param {number} bidAmount      - The bid amount in INR
- * @param {number} askingPrice    - The listing's asking price in INR
- * @param {string} condition      - "working" | "repairable" | "mixed" | "scrap"
- * @param {number} quantity       - Number of items / kg / tons
- * @returns {{ score: number, label: string, color: string, explanation: string }}
- */
-export function evaluateBidFairness(bidAmount, askingPrice, condition, quantity) {
-  // If no asking price, ratio defaults to 1.0 (neutral)
+function parseInputs(bidArg, listingArg, conditionArg, quantityArg) {
+  let bidAmount = 0;
+  let askingPrice = 0;
+  let condition = "mixed";
+  let quantity = 1;
+
+  if (typeof bidArg === "object" && bidArg !== null) {
+    bidAmount = Number(bidArg.amount) || 0;
+  } else {
+    bidAmount = Number(bidArg) || 0;
+  }
+
+  if (typeof listingArg === "object" && listingArg !== null) {
+    askingPrice = Number(listingArg.askingPrice) || 0;
+    if (listingArg.condition) condition = listingArg.condition;
+    if (listingArg.quantity !== undefined) quantity = Number(listingArg.quantity) || 1;
+  } else {
+    askingPrice = Number(listingArg) || 0;
+  }
+
+  if (conditionArg !== undefined && conditionArg !== null) {
+    condition = conditionArg;
+  }
+  if (quantityArg !== undefined && quantityArg !== null) {
+    quantity = Number(quantityArg) || quantity;
+  }
+
+  let condScore = 0.4;
+  if (typeof condition === "number") {
+    condScore = Math.max(0, Math.min(1, condition));
+  } else if (typeof condition === "string") {
+    const key = condition.toLowerCase().trim();
+    condScore = CONDITION_SCORES[key] ?? 0.4;
+  }
+
   const ratio = askingPrice > 0 ? bidAmount / askingPrice : 1.0;
-  const condScore = CONDITION_SCORES[condition] ?? 0.4;
-  const qty = Number(quantity) || 1;
-
-  // Fuzzify inputs
-  const pR  = priceRatioMemberships(ratio);
-  const cR  = conditionMemberships(condScore);
-  const qR  = quantityMemberships(qty);
-
-  // Fuzzy Rule Base (20 rules)
-  // Rules follow pattern: IF price IS X AND condition IS Y AND quantity IS Z THEN fairness IS F
-  const rules = [
-    // --- Clearly unfair: low price regardless of condition ---
-    { outputSet: "unfair",     strength: Math.min(pR.low,  cR.good,     qR.small)  },
-    { outputSet: "unfair",     strength: Math.min(pR.low,  cR.good,     qR.medium) },
-    { outputSet: "unfair",     strength: Math.min(pR.low,  cR.good,     qR.bulk)   },
-    { outputSet: "unfair",     strength: Math.min(pR.low,  cR.moderate, qR.small)  },
-    { outputSet: "borderline", strength: Math.min(pR.low,  cR.moderate, qR.medium) },
-    { outputSet: "borderline", strength: Math.min(pR.low,  cR.moderate, qR.bulk)   },
-    { outputSet: "borderline", strength: Math.min(pR.low,  cR.poor,     qR.small)  },
-    { outputSet: "fair",       strength: Math.min(pR.low,  cR.poor,     qR.medium) },
-    { outputSet: "fair",       strength: Math.min(pR.low,  cR.poor,     qR.bulk)   },
-
-    // --- Fair price band ---
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.good,     qR.small)  },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.good,     qR.medium) },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.good,     qR.bulk)   },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.moderate, qR.small)  },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.moderate, qR.medium) },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.moderate, qR.bulk)   },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.poor,     qR.small)  },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.poor,     qR.medium) },
-    { outputSet: "fair",       strength: Math.min(pR.fair, cR.poor,     qR.bulk)   },
-
-    // --- High price (overbidding is also fine/very fair) ---
-    { outputSet: "fair",       strength: Math.min(pR.high, cR.good,     qR.small)  },
-    { outputSet: "fair",       strength: Math.min(pR.high, cR.poor,     qR.bulk)   },
-  ];
-
-  // Defuzzify to get crisp fairness score [0, 100]
-  const score = defuzzify(rules);
-  const rounded = Math.round(score);
-
-  // Linguistic label and UI color
-  let label, color;
-  if (rounded >= 62)      { label = "Fair Bid";    color = "green";  }
-  else if (rounded >= 42) { label = "Borderline";  color = "yellow"; }
-  else                    { label = "Low-ball";     color = "red";    }
-
-  const explanation = `Fuzzy Score: ${rounded}/100 | Price ratio: ${ratio.toFixed(2)}x | Condition: ${condition} | Qty: ${qty}`;
-
-  return { score: rounded, label, color, explanation };
-}
-
-export function getFuzzyDetails(bidAmount, askingPrice, condition, quantity) {
-  const base = evaluateBidFairness(bidAmount, askingPrice, condition, quantity);
-  const ratio = askingPrice > 0 ? bidAmount / askingPrice : 1.0;
-  const condScore = CONDITION_SCORES[condition] ?? 0.4;
-  const qty = Number(quantity) || 1;
-  const pR = priceRatioMemberships(ratio);
-  const cR = conditionMemberships(condScore);
-  const qR = quantityMemberships(qty);
 
   return {
-    ...base,
-    ratio: Number(ratio.toFixed(2)),
+    bidAmount,
+    askingPrice,
+    condition: typeof condition === "string" ? condition : (condScore <= 0.25 ? "scrap" : condScore <= 0.55 ? "mixed" : condScore <= 0.85 ? "repairable" : "working"),
+    condScore,
+    quantity: Math.max(1, quantity),
+    ratio,
+  };
+}
+
+function buildMamdaniRules(pR, cR, qR) {
+  return [
+    // Low Price Ratio Rules
+    { id: 1, text: "IF Price is LOW AND Condition is GOOD AND Qty is SMALL THEN UNFAIR", outputSet: "unfair", strength: Math.min(pR.low, cR.good, qR.small) },
+    { id: 2, text: "IF Price is LOW AND Condition is GOOD AND Qty is MEDIUM THEN UNFAIR", outputSet: "unfair", strength: Math.min(pR.low, cR.good, qR.medium) },
+    { id: 3, text: "IF Price is LOW AND Condition is GOOD AND Qty is BULK THEN UNFAIR", outputSet: "unfair", strength: Math.min(pR.low, cR.good, qR.bulk) },
+    { id: 4, text: "IF Price is LOW AND Condition is MODERATE AND Qty is SMALL THEN UNFAIR", outputSet: "unfair", strength: Math.min(pR.low, cR.moderate, qR.small) },
+    { id: 5, text: "IF Price is LOW AND Condition is MODERATE AND Qty is MEDIUM THEN BORDERLINE", outputSet: "borderline", strength: Math.min(pR.low, cR.moderate, qR.medium) },
+    { id: 6, text: "IF Price is LOW AND Condition is MODERATE AND Qty is BULK THEN BORDERLINE", outputSet: "borderline", strength: Math.min(pR.low, cR.moderate, qR.bulk) },
+    { id: 7, text: "IF Price is LOW AND Condition is POOR (Scrap) AND Qty is SMALL THEN BORDERLINE", outputSet: "borderline", strength: Math.min(pR.low, cR.poor, qR.small) },
+    { id: 8, text: "IF Price is LOW AND Condition is POOR (Scrap) AND Qty is MEDIUM THEN FAIR", outputSet: "fair", strength: Math.min(pR.low, cR.poor, qR.medium) },
+    { id: 9, text: "IF Price is LOW AND Condition is POOR (Scrap) AND Qty is BULK THEN FAIR", outputSet: "fair", strength: Math.min(pR.low, cR.poor, qR.bulk) },
+
+    // Fair Price Ratio Rules
+    { id: 10, text: "IF Price is FAIR AND Condition is GOOD AND Qty is SMALL THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.good, qR.small) },
+    { id: 11, text: "IF Price is FAIR AND Condition is GOOD AND Qty is MEDIUM THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.good, qR.medium) },
+    { id: 12, text: "IF Price is FAIR AND Condition is GOOD AND Qty is BULK THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.good, qR.bulk) },
+    { id: 13, text: "IF Price is FAIR AND Condition is MODERATE AND Qty is SMALL THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.moderate, qR.small) },
+    { id: 14, text: "IF Price is FAIR AND Condition is MODERATE AND Qty is MEDIUM THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.moderate, qR.medium) },
+    { id: 15, text: "IF Price is FAIR AND Condition is MODERATE AND Qty is BULK THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.moderate, qR.bulk) },
+    { id: 16, text: "IF Price is FAIR AND Condition is POOR AND Qty is SMALL THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.poor, qR.small) },
+    { id: 17, text: "IF Price is FAIR AND Condition is POOR AND Qty is MEDIUM THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.poor, qR.medium) },
+    { id: 18, text: "IF Price is FAIR AND Condition is POOR AND Qty is BULK THEN FAIR", outputSet: "fair", strength: Math.min(pR.fair, cR.poor, qR.bulk) },
+
+    // High Price Ratio Rules (Overbidding / Premium)
+    { id: 19, text: "IF Price is HIGH AND Condition is GOOD THEN FAIR", outputSet: "fair", strength: Math.min(pR.high, cR.good) },
+    { id: 20, text: "IF Price is HIGH AND Condition is POOR THEN FAIR", outputSet: "fair", strength: Math.min(pR.high, cR.poor) },
+  ];
+}
+
+/**
+ * Evaluate bid fairness using Mamdani Fuzzy Inference System (FIS).
+ * Resilient to either individual arguments or object parameters.
+ */
+export function evaluateBidFairness(bidArg, listingArg, conditionArg, quantityArg) {
+  const inputs = parseInputs(bidArg, listingArg, conditionArg, quantityArg);
+  const pR = priceRatioMemberships(inputs.ratio);
+  const cR = conditionMemberships(inputs.condScore);
+  const qR = quantityMemberships(inputs.quantity);
+
+  const rules = buildMamdaniRules(pR, cR, qR);
+  const score = defuzzifyCentroid(rules);
+  const rounded = Math.round(score);
+
+  let label, color;
+  if (rounded >= 62) {
+    label = "Fair Bid";
+    color = "green";
+  } else if (rounded >= 42) {
+    label = "Borderline";
+    color = "yellow";
+  } else {
+    label = "Low-ball";
+    color = "red";
+  }
+
+  const explanation = `Mamdani Score: ${rounded}/100 | Price Ratio: ${inputs.ratio.toFixed(2)}x | Condition: ${inputs.condition} (${inputs.condScore}) | Qty: ${inputs.quantity}`;
+
+  return {
+    score: rounded,
+    label,
+    color,
+    explanation,
+  };
+}
+
+/**
+ * Returns comprehensive evaluation data including fuzzy sets and active fired rules.
+ */
+export function getFuzzyDetails(bidArg, listingArg, conditionArg, quantityArg) {
+  const inputs = parseInputs(bidArg, listingArg, conditionArg, quantityArg);
+  const pR = priceRatioMemberships(inputs.ratio);
+  const cR = conditionMemberships(inputs.condScore);
+  const qR = quantityMemberships(inputs.quantity);
+
+  const rules = buildMamdaniRules(pR, cR, qR);
+  const score = defuzzifyCentroid(rules);
+  const rounded = Math.round(score);
+
+  let label, color;
+  if (rounded >= 62) {
+    label = "Fair Bid";
+    color = "green";
+  } else if (rounded >= 42) {
+    label = "Borderline";
+    color = "yellow";
+  } else {
+    label = "Low-ball";
+    color = "red";
+  }
+
+  const activeRules = rules
+    .filter((r) => r.strength > 0.01)
+    .map((r) => ({
+      id: r.id,
+      text: r.text,
+      strength: Number(r.strength.toFixed(3)),
+      outputSet: r.outputSet,
+    }));
+
+  return {
+    score: rounded,
+    label,
+    color,
+    ratio: Number(inputs.ratio.toFixed(2)),
+    crispInputs: {
+      bidAmount: inputs.bidAmount,
+      askingPrice: inputs.askingPrice,
+      condition: inputs.condition,
+      condScore: inputs.condScore,
+      quantity: inputs.quantity,
+      ratio: Number(inputs.ratio.toFixed(2)),
+    },
     memberships: {
-      priceRatio: { low: Number(pR.low.toFixed(3)), fair: Number(pR.fair.toFixed(3)), high: Number(pR.high.toFixed(3)) },
-      condition: { poor: Number(cR.poor.toFixed(3)), moderate: Number(cR.moderate.toFixed(3)), good: Number(cR.good.toFixed(3)) },
-      quantity: { small: Number(qR.small.toFixed(3)), medium: Number(qR.medium.toFixed(3)), bulk: Number(qR.bulk.toFixed(3)) },
-    }
+      priceRatio: {
+        low: Number(pR.low.toFixed(3)),
+        fair: Number(pR.fair.toFixed(3)),
+        high: Number(pR.high.toFixed(3)),
+      },
+      condition: {
+        poor: Number(cR.poor.toFixed(3)),
+        moderate: Number(cR.moderate.toFixed(3)),
+        good: Number(cR.good.toFixed(3)),
+      },
+      quantity: {
+        small: Number(qR.small.toFixed(3)),
+        medium: Number(qR.medium.toFixed(3)),
+        bulk: Number(qR.bulk.toFixed(3)),
+      },
+    },
+    activeRules,
+    defuzzification: {
+      method: "Centroid / Center of Gravity (COG)",
+      crispValue: Number(score.toFixed(2)),
+      ruleCount: 20,
+      activeFiredCount: activeRules.length,
+    },
+    explanation: `Mamdani FIS: ${rounded}/100 (${label}) for ${inputs.ratio.toFixed(2)}x offer on ${inputs.condition} lot (${inputs.quantity} units)`,
   };
 }

@@ -1,21 +1,23 @@
 import crypto from "crypto";
-import Listing from "@/models/ListingModel";
-import Login from "@/models/LoginModel";
-import PaymentTransaction from "@/models/PaymentTransactionModel";
+import { prisma } from "@/lib/prisma";
 
 export async function getApprovedPaymentContext(listingId, user) {
-  const listing = await Listing.findById(listingId);
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    include: { bids: true }
+  });
+
   if (!listing) {
     return { error: { message: "Listing not found.", status: 404 } };
   }
-  if (listing.status !== "sold" || !listing.approvedBid) {
+  if (listing.status !== "sold" || !listing.approvedBidId) {
     return { error: { message: "A bid must be approved before payment.", status: 400 } };
   }
   if (listing.payment?.status === "paid") {
     return { error: { message: "This listing is already paid.", status: 409 } };
   }
 
-  const approvedBid = listing.bids.id(listing.approvedBid);
+  const approvedBid = (listing.bids || []).find((b) => b.id === listing.approvedBidId);
   if (!approvedBid || approvedBid.status !== "approved") {
     return { error: { message: "Approved bid could not be verified.", status: 400 } };
   }
@@ -23,15 +25,23 @@ export async function getApprovedPaymentContext(listingId, user) {
     return { error: { message: "Only the approved bidder can pay for this listing.", status: 403 } };
   }
 
-  const receiver = await Login.findById(listing.sellerId);
+  const receiver = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: listing.sellerId || "" },
+        { email: listing.sellerEmail }
+      ]
+    }
+  });
+
   if (!receiver) {
     return { error: { message: "Seller account not found.", status: 404 } };
   }
 
   return {
-    listing,
-    approvedBid,
-    receiver,
+    listing: { ...listing, _id: listing.id, approvedBid: listing.approvedBidId },
+    approvedBid: { ...approvedBid, _id: approvedBid.id },
+    receiver: { ...receiver, _id: receiver.id },
     amount: Number(approvedBid.amount),
   };
 }
@@ -60,21 +70,9 @@ export function verifyRazorpaySignature({ orderId, paymentId, signature }) {
   );
 }
 
-export async function createTokenBlockHash(payload) {
-  const lastTokenPayment = await PaymentTransaction.findOne({
-    method: "token",
-    status: "paid",
-    hash: { $ne: null },
-  }).sort({ blockIndex: -1 });
-
-  const blockIndex = lastTokenPayment ? lastTokenPayment.blockIndex + 1 : 1;
-  const previousHash = lastTokenPayment?.hash || "GENESIS";
-  const nonce = crypto.randomBytes(16).toString("hex");
-  const createdAt = new Date();
-  const hash = crypto
+export function createTokenBlockHash({ blockIndex, previousHash, payload, timestamp }) {
+  return crypto
     .createHash("sha256")
-    .update(JSON.stringify({ ...payload, blockIndex, previousHash, nonce, createdAt: createdAt.toISOString() }))
+    .update(`${blockIndex}:${previousHash}:${JSON.stringify(payload)}:${timestamp}`)
     .digest("hex");
-
-  return { blockIndex, previousHash, hash, nonce, createdAt };
 }

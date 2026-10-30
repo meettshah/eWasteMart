@@ -1,22 +1,24 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Listing from "@/models/ListingModel";
+import { prisma } from "@/lib/prisma";
 import { dispatchNotification } from "@/lib/notifications";
 
 export async function POST(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  await mongooseConnect();
   const { id, bidId } = await params;
   
-  const listing = await Listing.findById(id);
+  const listing = await prisma.listing.findUnique({
+    where: { id }
+  });
   if (!listing) return NextResponse.json({ message: "Listing not found" }, { status: 404 });
   if (listing.status !== "open") return NextResponse.json({ message: "Listing is no longer open" }, { status: 400 });
 
-  const bid = listing.bids.id(bidId);
+  const bid = await prisma.bid.findUnique({
+    where: { id: bidId }
+  });
   if (!bid) return NextResponse.json({ message: "Bid not found" }, { status: 404 });
 
   const body = await req.json();
@@ -29,8 +31,11 @@ export async function POST(req, { params }) {
     const { amount, message } = body;
     if (!amount || amount <= 0) return NextResponse.json({ message: "Invalid counter offer amount" }, { status: 400 });
 
-    bid.counterOffer = { amount, message: message || "", status: "pending" };
-    await listing.save();
+    const counterOffer = { amount, message: message || "", status: "pending" };
+    await prisma.bid.update({
+      where: { id: bidId },
+      data: { counterOffer }
+    });
 
     await dispatchNotification({
       userId: bid.bidderId,
@@ -51,40 +56,52 @@ export async function POST(req, { params }) {
     if (!["accept", "reject"].includes(action)) {
       return NextResponse.json({ message: "Invalid action. Use 'accept' or 'reject'." }, { status: 400 });
     }
-    if (!bid.counterOffer || bid.counterOffer.status !== "pending") {
+    const counterOffer = bid.counterOffer;
+    if (!counterOffer || counterOffer.status !== "pending") {
       return NextResponse.json({ message: "No pending counter offer found" }, { status: 400 });
     }
 
     if (action === "accept") {
-      bid.amount = bid.counterOffer.amount;
-      bid.counterOffer.status = "accepted";
-      
-      await dispatchNotification({
-        userId: listing.sellerId,
-        userEmail: listing.sellerEmail,
-        title: "Counter Offer Accepted",
-        message: `${session.user.name} accepted your counter offer of Rs. ${bid.amount.toLocaleString("en-IN")} on "${listing.title}". You can now approve this bid!`,
-        type: "BID",
-        link: "/marketplace",
-        channels: ["IN_APP", "EMAIL"]
+      await prisma.bid.update({
+        where: { id: bidId },
+        data: {
+          amount: counterOffer.amount,
+          counterOffer: { ...counterOffer, status: "accepted" }
+        }
       });
-    } else {
-      bid.counterOffer.status = "rejected";
-      
-      await dispatchNotification({
-        userId: listing.sellerId,
-        userEmail: listing.sellerEmail,
-        title: "Counter Offer Rejected",
-        message: `${session.user.name} rejected your counter offer on "${listing.title}".`,
-        type: "BID",
-        link: "/marketplace",
-        channels: ["IN_APP", "EMAIL"]
-      });
-    }
 
-    await listing.save();
-    return NextResponse.json({ message: `Counter offer ${action === "accept" ? "accepted" : "rejected"}` });
+      await dispatchNotification({
+        userId: listing.sellerId,
+        userEmail: listing.sellerEmail,
+        title: "Counter Offer Accepted!",
+        message: `${session.user.name} accepted your counter offer of Rs. ${counterOffer.amount.toLocaleString("en-IN")} on "${listing.title}". You can now approve this bid!`,
+        type: "BID",
+        link: "/marketplace",
+        channels: ["IN_APP", "EMAIL"]
+      });
+
+      return NextResponse.json({ message: "Counter offer accepted successfully" });
+    } else {
+      await prisma.bid.update({
+        where: { id: bidId },
+        data: {
+          counterOffer: { ...counterOffer, status: "rejected" }
+        }
+      });
+
+      await dispatchNotification({
+        userId: listing.sellerId,
+        userEmail: listing.sellerEmail,
+        title: "Counter Offer Declined",
+        message: `${session.user.name} declined your counter offer on "${listing.title}". The original bid remains active.`,
+        type: "BID",
+        link: "/marketplace",
+        channels: ["IN_APP", "EMAIL"]
+      });
+
+      return NextResponse.json({ message: "Counter offer rejected" });
+    }
   }
 
-  return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  return NextResponse.json({ message: "Unauthorized action on this bid" }, { status: 403 });
 }

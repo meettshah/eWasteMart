@@ -1,12 +1,7 @@
-/**
- * GET /api/paytm/status?orderId=EWM-123
- * Allows frontend to poll payment status after modal closes.
- */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import { Order } from "@/models/Order";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -21,9 +16,12 @@ export async function GET(req) {
     return NextResponse.json({ message: "orderId required" }, { status: 400 });
   }
 
-  await mongooseConnect();
-  
-  const order = await Order.findOne({ paytmOrderId });
+  const order = await prisma.order.findFirst({
+    where: {
+      OR: [{ orderId: paytmOrderId }, { id: paytmOrderId }]
+    }
+  });
+
   if (!order) {
     return NextResponse.json({ message: "Order not found" }, { status: 404 });
   }

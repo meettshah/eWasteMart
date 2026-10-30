@@ -1,5 +1,4 @@
-import { mongooseConnect } from "@/lib/mongoose";
-import Login from "@/models/LoginModel";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -11,21 +10,25 @@ export async function GET(req) {
             return NextResponse.redirect(new URL('/login?error=InvalidVerificationToken', req.url));
         }
 
-        await mongooseConnect();
-
-        const user = await Login.findOne({
-            verifyToken: token,
-            verifyTokenExpiry: { $gt: Date.now() }
+        const user = await prisma.user.findFirst({
+            where: {
+                verifyToken: token,
+                verifyTokenExpiry: { gt: new Date() }
+            }
         });
 
         if (!user) {
             return NextResponse.redirect(new URL('/login?error=TokenExpiredOrInvalid', req.url));
         }
 
-        user.isEmailVerified = true;
-        user.verifyToken = undefined;
-        user.verifyTokenExpiry = undefined;
-        await user.save();
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                isEmailVerified: true,
+                verifyToken: null,
+                verifyTokenExpiry: null
+            }
+        });
 
         return NextResponse.redirect(new URL('/login?verified=true', req.url));
 

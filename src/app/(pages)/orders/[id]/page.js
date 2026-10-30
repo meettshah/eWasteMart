@@ -6,9 +6,7 @@ import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import { CheckCircle2, Clock3, MapPin, Package, Truck, Wallet, FileText, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
 import { motion } from "framer-motion";
-import ImpactReport from "@/components/ImpactReport";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -177,23 +175,6 @@ export default function OrderDetailsPage() {
             </div>
           </div>
         </motion.section>
-
-        {listing && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-          >
-            <h3 className="mb-2 text-base font-bold text-gray-900 dark:text-white">
-              🌱 Environmental Impact Certificate
-            </h3>
-            <p className="mb-4 text-xs text-gray-500">
-              Generate an official, RAG-grounded AI environmental impact report for this transaction.
-            </p>
-            <ImpactReport listing={listing} />
-          </motion.div>
-        )}
       </div>
     </main>
   );

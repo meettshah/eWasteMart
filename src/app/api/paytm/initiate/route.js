@@ -5,15 +5,10 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-
-// Use PaytmChecksum library
 const PaytmChecksum = require("paytmchecksum");
 
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Listing from "@/models/ListingModel";
-import { Order } from "@/models/Order";
-import Login from "@/models/LoginModel";
+import { prisma } from "@/lib/prisma";
 
 const MID = process.env.PAYTM_MID;
 const M_KEY = process.env.PAYTM_MERCHANT_KEY;
@@ -25,8 +20,6 @@ export async function POST(req) {
   if (!session?.user) {
     return NextResponse.json({ message: "Not logged in" }, { status: 401 });
   }
-
-  await mongooseConnect();
   
   const { listingId, bidId, amount } = await req.json();
   
@@ -34,17 +27,17 @@ export async function POST(req) {
     return NextResponse.json({ message: "Missing fields" }, { status: 400 });
   }
 
-  const listing = await Listing.findById(listingId);
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    include: { bids: true }
+  });
   if (!listing) return NextResponse.json({ message: "Listing not found" }, { status: 404 });
 
   if (listing.status !== "sold") {
     return NextResponse.json({ message: "Listing is not sold yet" }, { status: 400 });
   }
-  if (listing.paymentStatus === "paid") {
-    return NextResponse.json({ message: "Listing is already paid" }, { status: 409 });
-  }
 
-  const approvedBid = listing.bids.id(bidId);
+  const approvedBid = (listing.bids || []).find((b) => b.id === bidId);
   if (!approvedBid || approvedBid.status !== "approved") {
     return NextResponse.json({ message: "Approved bid not found" }, { status: 400 });
   }
@@ -53,9 +46,16 @@ export async function POST(req) {
     return NextResponse.json({ message: "You are not the approved bidder" }, { status: 403 });
   }
 
-  // Get payer and payee info
-  const payer = await Login.findOne({ email: session.user.email });
-  const payee = await Login.findOne({ email: listing.sellerEmail });
+  // Get payer and payee info from PostgreSQL
+  const payer = await prisma.user.findUnique({ where: { email: session.user.email.toLowerCase().trim() } });
+  const payee = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: listing.sellerId || "" },
+        { email: listing.sellerEmail }
+      ]
+    }
+  });
 
   if (!payer || !payee) {
     return NextResponse.json({ message: "User records not found" }, { status: 500 });
@@ -63,19 +63,19 @@ export async function POST(req) {
 
   const paytmOrderId = `EWM-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
   
-  // Create Order in DB
-  const order = await Order.create({
-    listingId,
-    bidId,
-    payerId: payer._id,
-    payerName: payer.name,
-    payerEmail: payer.email,
-    payeeId: payee._id,
-    payeeName: payee.name,
-    payeeEmail: payee.email,
-    amount: approvedBid.amount,
-    paytmOrderId,
-    status: "initiated"
+  // Create Order in PostgreSQL
+  const order = await prisma.order.create({
+    data: {
+      orderId: paytmOrderId,
+      listingId,
+      payerId: payer.id,
+      payerEmail: payer.email,
+      payeeId: payee.id,
+      payeeEmail: payee.email,
+      amount: approvedBid.amount,
+      status: "pending",
+      paymentMethod: "paytm",
+    }
   });
 
   // Prepare Paytm initiate transaction request
@@ -91,7 +91,7 @@ export async function POST(req) {
         currency: "INR",
       },
       userInfo: {
-        custId: payer._id.toString(),
+        custId: payer.id,
         email: payer.email,
       },
     }
@@ -121,9 +121,6 @@ export async function POST(req) {
     const data = await res.json();
     
     if (data.body.resultInfo.resultStatus === "S") {
-      order.paytmTxnToken = data.body.txnToken;
-      await order.save();
-      
       return NextResponse.json({
         txnToken: data.body.txnToken,
         paytmOrderId,
@@ -131,9 +128,6 @@ export async function POST(req) {
       });
     } else if (data.body.resultInfo.resultCode === "501" || process.env.NEXT_PUBLIC_PAYTM_ENV !== "production") {
       console.warn("Paytm API rejected the initiation or mock mode is active. Falling back to mock transaction token to allow testing.");
-      order.paytmTxnToken = "MOCK_TXN_TOKEN";
-      await order.save();
-      
       return NextResponse.json({
         txnToken: "MOCK_TXN_TOKEN",
         paytmOrderId,

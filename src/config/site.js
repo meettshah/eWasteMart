@@ -7,8 +7,6 @@ export const siteConfig = {
     { label: "Pickups", href: "/pickups" },
     { label: "Payments", href: "/payments" },
     { label: "Recyclers", href: "/recyclers" },
-    { label: "Partners", href: "/collaborators" },
-    { label: "About", href: "/about-us" },
   ],
   navMenuItems: [
     { label: "Dashboard", href: "/home" },
@@ -16,8 +14,6 @@ export const siteConfig = {
     { label: "Pickups", href: "/pickups" },
     { label: "Payments", href: "/payments" },
     { label: "Recyclers", href: "/recyclers" },
-    { label: "Partners", href: "/collaborators" },
-    { label: "About", href: "/about-us" },
     { label: "Profile", href: "/profile" },
     { label: "Settings", href: "/settings" },
   ],

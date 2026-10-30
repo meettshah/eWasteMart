@@ -1,11 +1,7 @@
-/**
- * POST /api/pickup/[id]/reschedule
- */
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Pickup from "@/models/Pickup";
+import { prisma } from "@/lib/prisma";
 
 const TIME_SLOTS = ["09:00–11:00", "11:00–13:00", "14:00–16:00", "16:00–18:00"];
 
@@ -13,10 +9,8 @@ export async function POST(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ message: "Please login first." }, { status: 401 });
 
-  await mongooseConnect();
-
   const { id } = await params;
-  const pickup = await Pickup.findById(id);
+  const pickup = await prisma.pickup.findUnique({ where: { id } });
   if (!pickup) return NextResponse.json({ message: "Pickup not found." }, { status: 404 });
 
   const isSeller = pickup.sellerEmail === session.user.email;
@@ -38,20 +32,15 @@ export async function POST(req, { params }) {
     return NextResponse.json({ message: "New date must be at least 24 hours from now." }, { status: 400 });
   }
 
-  pickup.rescheduleHistory.push({
-    oldDate: pickup.scheduledDate,
-    oldTimeSlot: pickup.scheduledTimeSlot,
-    newDate: newScheduled,
-    newTimeSlot,
-    requestedBy: isSeller ? "seller" : "recycler",
-    reason: reason || "",
+  await prisma.pickup.update({
+    where: { id },
+    data: {
+      scheduledDate: newScheduled,
+      scheduledTimeSlot: newTimeSlot,
+      recyclerConfirmed: false,
+      pickupNotes: reason ? `${pickup.pickupNotes || ''} (Reschedule reason: ${reason})` : pickup.pickupNotes,
+    }
   });
 
-  pickup.scheduledDate = newScheduled;
-  pickup.scheduledTimeSlot = newTimeSlot;
-  pickup.recyclerConfirmed = false;
-  pickup.recyclerConfirmedAt = null;
-  
-  await pickup.save();
   return NextResponse.json({ message: "Rescheduled." });
 }

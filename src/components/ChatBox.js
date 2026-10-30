@@ -2,9 +2,9 @@
 
 import axios from "axios";
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Sparkles, Trash2 } from "lucide-react";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 // Feature 1C: Multi-turn Chatbot (Generative AI & Expert Domain Engine)
 // Maintains full conversation history and sends it to the server
@@ -24,53 +24,6 @@ const Chatbot = () => {
 
   const scrollToBottom = () => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  /**
-   * Enhanced markdown renderer for links and bold text
-   */
-  const renderMessageText = (text) => {
-    if (!text) return "";
-
-    // Regex for [link](url) and **bold**
-    const tokenRegex = /(\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*)/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = tokenRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index));
-      }
-
-      if (match[2] && match[3]) {
-        // [label](url)
-        parts.push(
-          <Link 
-            key={match.index} 
-            href={match[3]} 
-            className="font-bold text-emerald-600 dark:text-emerald-400 underline decoration-emerald-500/50 underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
-          >
-            {match[2]}
-          </Link>
-        );
-      } else if (match[4]) {
-        // **bold**
-        parts.push(
-          <strong key={match.index} className="font-bold text-slate-900 dark:text-white">
-            {match[4]}
-          </strong>
-        );
-      }
-
-      lastIndex = tokenRegex.lastIndex;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
-    }
-
-    return parts.length > 0 ? parts : text;
   };
 
   useEffect(() => {
@@ -166,13 +119,17 @@ const Chatbot = () => {
                     {message.sender === "user" ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
                   </div>
                   <div
-                    className={`max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 leading-relaxed text-xs ${
+                    className={`max-w-[85%] break-words rounded-2xl px-4 py-2.5 leading-relaxed text-xs ${
                       message.sender === "user"
-                        ? "bg-emerald-600 text-white rounded-br-none shadow-sm"
+                        ? "bg-emerald-600 text-white rounded-br-none shadow-sm whitespace-pre-wrap"
                         : "bg-slate-100/90 text-slate-800 dark:bg-slate-800/80 dark:text-slate-200 rounded-bl-none border border-slate-200/80 dark:border-slate-700/60"
                     }`}
                   >
-                    {renderMessageText(message.text)}
+                    {message.sender === "bot" ? (
+                      <MarkdownRenderer content={message.text} />
+                    ) : (
+                      message.text
+                    )}
                   </div>
                 </div>
               ))}
@@ -192,7 +149,7 @@ const Chatbot = () => {
               <div ref={endOfMessagesRef} />
             </div>
 
-            {/* Input Area (Generous padding, clean focus ring, spacious typing UI) */}
+            {/* Input Area */}
             <form onSubmit={handleSendMessage} className="border-t border-slate-200/80 bg-white/90 p-3.5 dark:border-slate-800 dark:bg-slate-900/90 backdrop-blur-md">
               <div className="relative flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-slate-50/90 px-3.5 py-1.5 shadow-xs transition-all focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-3 focus-within:ring-emerald-500/15 dark:border-slate-700 dark:bg-slate-800/90 dark:focus-within:bg-slate-800">
                 <input

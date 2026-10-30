@@ -1,5 +1,4 @@
-import { mongooseConnect } from "@/lib/mongoose";
-import Login from "@/models/LoginModel";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
@@ -15,26 +14,26 @@ export async function POST(req) {
             return NextResponse.json({ message: "Password must be at least 6 characters" }, { status: 400 });
         }
 
-        await mongooseConnect();
-
-        const user = await Login.findOne({
-            resetPasswordToken: token,
-            resetPasswordExpiry: { $gt: Date.now() }
+        const user = await prisma.user.findFirst({
+            where: {
+                resetPasswordToken: token,
+                resetPasswordExpiry: { gt: new Date() }
+            }
         });
 
         if (!user) {
             return NextResponse.json({ message: "Invalid or expired reset token." }, { status: 400 });
         }
 
-        // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
-        
-        // Clear reset tokens
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpiry = undefined;
-        
-        await user.save();
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                resetPasswordToken: null,
+                resetPasswordExpiry: null
+            }
+        });
 
         return NextResponse.json({ message: "Password reset successful" }, { status: 200 });
 

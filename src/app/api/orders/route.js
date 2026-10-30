@@ -1,51 +1,53 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import { Order } from "@/models/Order";
-import Listing from "@/models/ListingModel";
-import Pickup from "@/models/Pickup";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ message: "Please login first." }, { status: 401 });
   }
-
-  await mongooseConnect();
   
-  const email = session.user.email;
+  const email = session.user.email?.toLowerCase().trim();
   
   // Fetch orders where the user is either the payer or the payee
-  const orders = await Order.find({
-    $or: [{ payerEmail: email }, { payeeEmail: email }]
-  }).sort({ createdAt: -1 }).lean();
+  const orders = await prisma.order.findMany({
+    where: {
+      OR: [
+        { payerEmail: email },
+        { payeeEmail: email }
+      ]
+    },
+    include: {
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          category: true,
+        }
+      },
+      pickup: true
+    },
+    orderBy: { createdAt: "desc" }
+  });
 
-  // Populate the listing title manually for each order to display in the UI
-  for (let order of orders) {
-    const listing = await Listing.findById(order.listingId).select("title category");
-    if (listing) {
-      order.listingTitle = listing.title;
-      order.listingCategory = listing.category;
-    } else {
-      order.listingTitle = "Unknown Listing";
+  const formatted = orders.map((order) => {
+    let lifecycleStatus = order.status;
+    if (order.pickup) {
+      if (order.pickup.status === "scheduled") lifecycleStatus = "pickup scheduled";
+      else if (order.pickup.status === "in_progress" || order.pickup.status === "picked_up") lifecycleStatus = "in transit";
+      else if (order.pickup.status === "completed") lifecycleStatus = "completed";
     }
 
-    // Determine comprehensive lifecycle status
-    const pickup = await Pickup.findOne({ orderId: order._id }).lean();
-    
-    let lifecycleStatus = order.status; // defaults to 'initiated' or 'paid'
-    
-    // If we have a pickup, that means the lifecycle has progressed beyond payment
-    if (pickup) {
-      if (pickup.status === "scheduled") lifecycleStatus = "pickup scheduled";
-      else if (pickup.status === "in_progress" || pickup.status === "picked_up") lifecycleStatus = "in transit";
-      else if (pickup.status === "completed") lifecycleStatus = "completed";
-      
-    }
-    
-    order.lifecycleStatus = lifecycleStatus;
-  }
+    return {
+      ...order,
+      _id: order.id,
+      listingTitle: order.listing?.title || "Unknown Listing",
+      listingCategory: order.listing?.category || "",
+      lifecycleStatus,
+    };
+  });
 
-  return NextResponse.json(orders);
+  return NextResponse.json(formatted);
 }

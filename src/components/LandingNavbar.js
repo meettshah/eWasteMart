@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ThemeSwitch } from "./theme-switch";
-import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 
 export default function LandingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,7 +21,7 @@ export default function LandingNavbar() {
               eWaste<span className="text-emerald-600 dark:text-emerald-400">Mart</span>
             </span>
             <span className="text-[10px] font-medium tracking-wider uppercase text-slate-500 dark:text-slate-400">
-              Circular Economy
+              Recycle, Reuse & Repeat
             </span>
           </div>
         </Link>
@@ -35,29 +35,10 @@ export default function LandingNavbar() {
             How it works
           </Link>
           <Link
-            href="#ai-features"
-            className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            AI & Intelligence
-          </Link>
-          <Link
-            href="#roles"
+            href="/marketplace"
             className="rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400"
           >
-            Roles
-          </Link>
-          <Link
-            href="/collaborators"
-            className="rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400"
-          >
-            Enterprise Partners
-          </Link>
-          <Link
-            href="/about-us"
-            className="rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400"
-          >
-            About
+            Marketplace
           </Link>
         </nav>
 
@@ -102,34 +83,13 @@ export default function LandingNavbar() {
               How it works
             </Link>
             <Link
-              href="#ai-features"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200"
-            >
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              AI & Machine Intelligence
-            </Link>
-            <Link
-              href="#roles"
+              href="/marketplace"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 text-sm font-semibold text-slate-800 dark:text-slate-200"
             >
-              Roles & Verification
+              Marketplace
             </Link>
-            <Link
-              href="/collaborators"
-              onClick={() => setMobileMenuOpen(false)}
-              className="py-2 text-sm font-semibold text-slate-800 dark:text-slate-200"
-            >
-              Enterprise Partners
-            </Link>
-            <Link
-              href="/about-us"
-              onClick={() => setMobileMenuOpen(false)}
-              className="py-2 text-sm font-semibold text-slate-800 dark:text-slate-200"
-            >
-              About & Compliance
-            </Link>
+
             <div className="mt-2 flex flex-col gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
               <Link
                 href="/login"

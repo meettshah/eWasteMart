@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,15 +16,16 @@ import {
   Truck, 
   Wallet, 
   Factory, 
-  Building2, 
-  Info, 
   User, 
   Settings, 
   LogOut, 
   ChevronDown, 
   Menu, 
   X,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles,
+  Dna,
+  Eye
 } from "lucide-react";
 
 const roleConfig = {
@@ -41,8 +42,9 @@ const navIcons = {
   "/pickups": Truck,
   "/payments": Wallet,
   "/recyclers": Factory,
-  "/collaborators": Building2,
-  "/about-us": Info,
+  "/gen-ai": Sparkles,
+  "/soft-computing": Dna,
+  "/computer-vision": Eye,
 };
 
 export default function Nav() {
@@ -51,13 +53,49 @@ export default function Nav() {
   const user = session?.user;
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Independent Page Visibility Toggles
+  const [navConfig, setNavConfig] = useState({
+    genAi: true,
+    softComputing: true,
+    computerVision: true,
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const loadConfig = () => ({
+        genAi: localStorage.getItem("ewastemart_nav_gen_ai") !== "false",
+        softComputing: localStorage.getItem("ewastemart_nav_soft_computing") !== "false",
+        computerVision: localStorage.getItem("ewastemart_nav_computer_vision") !== "false",
+      });
+      setNavConfig(loadConfig());
+
+      const handleNavChange = (e) => {
+        if (e.detail) setNavConfig(e.detail);
+      };
+
+      const handleStorage = (e) => {
+        if (e.key?.startsWith("ewastemart_nav_")) {
+          setNavConfig(loadConfig());
+        }
+      };
+
+      window.addEventListener("academic_nav_change", handleNavChange);
+      window.addEventListener("storage", handleStorage);
+      return () => {
+        window.removeEventListener("academic_nav_change", handleNavChange);
+        window.removeEventListener("storage", handleStorage);
+      };
+    }
+  }, []);
 
   const roleMeta = roleConfig[user?.role] || roleConfig.user;
+  const hasAnyAcademic = navConfig.genAi || navConfig.softComputing || navConfig.computerVision;
 
   return (
     <>
       <nav className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-[#090D14]/85 shadow-xs">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 sm:py-4 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5 lg:px-8">
           
           {/* Brand */}
           <Link href="/home" className="flex items-center gap-2.5 transition-transform active:scale-95">
@@ -67,7 +105,7 @@ export default function Nav() {
                 eWaste<span className="text-emerald-600 dark:text-emerald-400">Mart</span>
               </span>
               <span className="text-[10px] font-medium tracking-wider uppercase text-slate-500 dark:text-slate-400">
-                Workspace
+                Recycle, Reuse & Repeat
               </span>
             </div>
           </Link>
@@ -92,6 +130,53 @@ export default function Nav() {
                 </Link>
               );
             })}
+
+            {/* Individual Academic Subject Navigation (Controlled Separately via Settings) */}
+            {hasAnyAcademic && (
+              <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
+            )}
+
+            {navConfig.genAi && (
+              <Link
+                href="/gen-ai"
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 ${
+                  pathname === "/gen-ai"
+                    ? "bg-violet-600 text-white shadow-sm dark:bg-violet-600 dark:text-white"
+                    : "text-violet-700 hover:bg-violet-100/70 dark:text-violet-300 dark:hover:bg-violet-950/60"
+                }`}
+              >
+                <Sparkles className={`h-3.5 w-3.5 ${pathname === "/gen-ai" ? "text-white" : "opacity-80"}`} />
+                Gen AI
+              </Link>
+            )}
+
+            {navConfig.softComputing && (
+              <Link
+                href="/soft-computing"
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 ${
+                  pathname === "/soft-computing"
+                    ? "bg-indigo-600 text-white shadow-sm dark:bg-indigo-600 dark:text-white"
+                    : "text-indigo-700 hover:bg-indigo-100/70 dark:text-indigo-300 dark:hover:bg-indigo-950/60"
+                }`}
+              >
+                <Dna className={`h-3.5 w-3.5 ${pathname === "/soft-computing" ? "text-white" : "opacity-80"}`} />
+                Soft Computing
+              </Link>
+            )}
+
+            {navConfig.computerVision && (
+              <Link
+                href="/computer-vision"
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 ${
+                  pathname === "/computer-vision"
+                    ? "bg-teal-600 text-white shadow-sm dark:bg-teal-600 dark:text-white"
+                    : "text-teal-700 hover:bg-teal-100/70 dark:text-teal-300 dark:hover:bg-teal-950/60"
+                }`}
+              >
+                <Eye className={`h-3.5 w-3.5 ${pathname === "/computer-vision" ? "text-white" : "opacity-80"}`} />
+                Computer Vision
+              </Link>
+            )}
           </div>
 
           {/* Right Controls */}
@@ -119,63 +204,64 @@ export default function Nav() {
                     {roleMeta.label}
                   </span>
                 </div>
-                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400 ml-0.5" />
               </button>
 
+              {/* Profile Dropdown */}
               <AnimatePresence>
                 {profileOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 top-full mt-2 w-60 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-[#0f172a]/95 z-50"
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900 z-50"
                   >
-                    <div className="border-b border-slate-100 dark:border-slate-800/80 px-3 py-2.5 mb-1">
-                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                        {user?.name || "My Account"}
-                      </p>
-                      <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
-                      <div className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${roleMeta.color}`}>
+                    <div className="p-3 border-b border-slate-100 dark:border-slate-800">
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+                        {user?.name || "User Account"}
+                      </div>
+                      <div className="text-xs text-slate-500 truncate">{user?.email}</div>
+                      <div className="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
                         <ShieldCheck className="h-3 w-3" />
                         {roleMeta.label}
                       </div>
                     </div>
 
-                    <div className="space-y-0.5">
+                    <div className="py-1">
                       <Link
                         href="/profile"
                         onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white transition-colors"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
                         <User className="h-4 w-4 text-slate-400" />
-                        Profile & Verification
+                        Profile
                       </Link>
                       <Link
                         href="/settings"
                         onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white transition-colors"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
                         <Settings className="h-4 w-4 text-slate-400" />
-                        Account Settings
+                        Settings & Preferences
                       </Link>
                     </div>
 
-                    <div className="my-1.5 h-px bg-slate-100 dark:bg-slate-800" />
-
-                    <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </button>
+                    <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <button
+                        onClick={() => signOut()}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Mobile Hamburger */}
+            {/* Mobile Hamburger Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 xl:hidden"
@@ -204,7 +290,7 @@ export default function Nav() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
                         isActive
                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
                           : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -216,6 +302,61 @@ export default function Nav() {
                   );
                 })}
               </div>
+
+              {/* Mobile Academic Labs if any is toggled on */}
+              {hasAnyAcademic && (
+                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                    Academic AI Labs
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {navConfig.genAi && (
+                      <Link
+                        href="/gen-ai"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl text-center text-[11px] font-bold border transition ${
+                          pathname === "/gen-ai"
+                            ? "bg-violet-600 text-white border-violet-600"
+                            : "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800/40"
+                        }`}
+                      >
+                        <Sparkles className="h-4 w-4 mb-1" />
+                        <span>Gen AI</span>
+                      </Link>
+                    )}
+
+                    {navConfig.softComputing && (
+                      <Link
+                        href="/soft-computing"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl text-center text-[11px] font-bold border transition ${
+                          pathname === "/soft-computing"
+                            ? "bg-indigo-600 text-white border-indigo-600"
+                            : "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/40"
+                        }`}
+                      >
+                        <Dna className="h-4 w-4 mb-1" />
+                        <span>Soft Comp</span>
+                      </Link>
+                    )}
+
+                    {navConfig.computerVision && (
+                      <Link
+                        href="/computer-vision"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl text-center text-[11px] font-bold border transition ${
+                          pathname === "/computer-vision"
+                            ? "bg-teal-600 text-white border-teal-600"
+                            : "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800/40"
+                        }`}
+                      >
+                        <Eye className="h-4 w-4 mb-1" />
+                        <span>CV Lab</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  name                String
+  email               String    @unique
+  password            String?
+  role                String    @default("user") // "user" | "bulk_seller" | "recycler" | "enterprise" | "pending"
+  isEmailVerified     Boolean   @default(false)
+  verifyToken         String?
+  verifyTokenExpiry   DateTime?
+  resetPasswordToken  String?
+  resetPasswordExpiry DateTime?
+  tokenBalance        Float     @default(100)
+  phone               String?
+  address             String?
+  city                String?
+  pincode             String?
+  state               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  listings          Listing[]
+  bids              Bid[]
+  notifications     Notification[]
+  ordersAsPayer     Order[]          @relation("PayerOrders")
+  ordersAsPayee     Order[]          @relation("PayeeOrders")
+  pickupsAsSeller   Pickup[]         @relation("SellerPickups")
+  pickupsAsRecycler Pickup[]         @relation("RecyclerPickups")
+  recyclerProfile   RecyclerProfile?
+
+  @@map("users")
+}
+
+model Listing {
+  id            String   @id @default(cuid())
+  title         String
+  category      String
+  quantity      Float    @default(1)
+  unit          String   @default("items")
+  condition     String   @default("mixed")
+  location      String   @default("")
+  askingPrice   Float
+  description   String   @default("")
+  imageUrl      String   @default("")
+  images        Json     @default("[]")
+  status        String   @default("open") // "open" | "sold" | "closed"
+  sellerId      String?
+  sellerEmail   String
+  seller        User?    @relation(fields: [sellerId], references: [id])
+  approvedBidId String?
+  payment       Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bids         Bid[]
+  orders       Order[]
+  pickups      Pickup[]
+  transactions PaymentTransaction[]
+
+  @@map("listings")
+}
+
+model Bid {
+  id            String    @id @default(cuid())
+  listingId     String
+  listing       Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  bidderId      String?
+  bidder        User?     @relation(fields: [bidderId], references: [id])
+  bidderName    String
+  bidderEmail   String
+  bidderRole    String
+  amount        Float
+  message       String    @default("")
+  status        String    @default("pending") // "pending" | "approved" | "rejected" | "expired"
+  expiresAt     DateTime?
+  counterOffer  Json?
+  fuzzyFairness Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  transactions PaymentTransaction[]
+
+  @@map("bids")
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  orderId       String    @unique
+  listingId     String
+  listing       Listing   @relation(fields: [listingId], references: [id])
+  payerId       String?
+  payer         User?     @relation("PayerOrders", fields: [payerId], references: [id])
+  payerEmail    String
+  payeeId       String?
+  payee         User?     @relation("PayeeOrders", fields: [payeeId], references: [id])
+  payeeEmail    String
+  amount        Float
+  currency      String    @default("INR")
+  status        String    @default("pending") // "pending" | "escrow_held" | "released" | "refunded" | "failed"
+  paymentMethod String    @default("paytm")
+  paymentId     String?
+  escrowStatus  String    @default("held") // "held" | "released" | "disputed" | "refunded"
+  releasedAt    DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  pickup Pickup?
+
+  @@map("orders")
+}
+
+model Pickup {
+  id                 String    @id @default(cuid())
+  orderId            String?   @unique
+  order              Order?    @relation(fields: [orderId], references: [id])
+  listingId          String
+  listing            Listing   @relation(fields: [listingId], references: [id])
+  sellerId           String?
+  seller             User?     @relation("SellerPickups", fields: [sellerId], references: [id])
+  sellerEmail        String
+  sellerPhone        String?
+  recyclerId         String?
+  recycler           User?     @relation("RecyclerPickups", fields: [recyclerId], references: [id])
+  recyclerEmail      String
+  recyclerPhone      String?
+  scheduledDate      DateTime
+  scheduledTimeSlot  String
+  pickupAddress      String
+  pickupNotes        String    @default("")
+  status             String    @default("scheduled") // "scheduled" | "in_progress" | "picked_up" | "completed" | "failed"
+  arrivalOtp         String?
+  otpExpiresAt       DateTime?
+  recyclerConfirmed  Boolean   @default(false)
+  cancellationReason String?
+  failureReason      String?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@map("pickups")
+}
+
+model RecyclerProfile {
+  id          String   @id @default(cuid())
+  ownerId     String?  @unique
+  owner       User?    @relation(fields: [ownerId], references: [id])
+  name        String
+  email       String
+  typeWaste   String
+  address     String
+  images      Json     @default("[]")
+  description String   @default("")
+  properties  Json     @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("recycler_profiles")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM")
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model PaymentTransaction {
+  id                String    @id @default(cuid())
+  listingId         String
+  listing           Listing   @relation(fields: [listingId], references: [id])
+  bidId             String?
+  bid               Bid?      @relation(fields: [bidId], references: [id])
+  payerId           String?
+  payerEmail        String
+  receiverId        String?
+  receiverEmail     String
+  method            String // "currency" | "token"
+  amount            Float
+  currency          String    @default("INR")
+  status            String    @default("initiated") // "initiated" | "paid" | "failed"
+  provider          String? // "razorpay" | "paytm" | "ewm-token"
+  providerOrderId   String?
+  providerPaymentId String?
+  blockIndex        Int?
+  previousHash      String?
+  hash              String?
+  metadata          Json?
+  paidAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("payment_transactions")
+}
+

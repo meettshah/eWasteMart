@@ -5,7 +5,7 @@
 //   - Stateful LLM interaction via Google Gemini API (@google/generative-ai)
 //   - Multi-turn context management with conversation history
 //   - System prompt role-containment
-//   - Context-aware database queries into MongoDB for real-time marketplace context
+//   - Context-aware database queries into PostgreSQL for real-time marketplace context
 //   - Algorithmic grounding for Soft Computing (Fuzzy FIS) & GA matchers
 // =====================================================================
 
@@ -13,8 +13,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { generateWithGemini } from "@/lib/gemini";
-import { mongooseConnect } from "@/lib/mongoose";
-import Listing from "@/models/ListingModel";
+import { prisma } from "@/lib/prisma";
 
 const WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 30;
@@ -26,7 +25,7 @@ You are the official eWasteMart AI Assistant with memory of the current conversa
 Your primary role is to answer questions strictly about the eWasteMart circular e-waste platform, how it works, and e-waste recycling facts.
 
 Key capabilities of eWasteMart:
-1. Multi-turn AI Chatbot & RAG Impact Certificates (Generative AI).
+1. Multi-turn AI Chatbot, Few-Shot Listing Synthesizer & Diffusion Photo Synthesizer (Generative AI).
 2. Mamdani Fuzzy Inference System for bid fairness defuzzification & Genetic Algorithm for optimal recycler assignment (Soft Computing).
 3. MobileNet v2 CNN device scanner with Laplacian blur detection & Sobel rust filters (Computer Vision).
 4. Doorstep OTP pickup verification via MSG91 SMS gateway.
@@ -59,7 +58,7 @@ function isRateLimited(key) {
 
 /**
  * Intelligent Domain-Expert Engine
- * Provides rich, real-time responses referencing actual MongoDB listings,
+ * Provides rich, real-time responses referencing actual PostgreSQL listings,
  * mathematical fuzzy formulas, and GA optimization mechanics.
  */
 async function generateDomainResponse(query, history = []) {
@@ -110,8 +109,7 @@ $$\\text{Fairness Score} = \\frac{\\int x \\cdot \\mu_{\\text{agg}}(x) \\, dx}{\
   ) {
     let listingsContext = "";
     try {
-      await mongooseConnect();
-      const docs = await Listing.find({}).sort({ updatedAt: -1 }).limit(6).lean();
+      const docs = await prisma.listing.findMany({ include: { bids: true }, orderBy: { updatedAt: "desc" }, take: 6 });
       if (docs && docs.length > 0) {
         listingsContext = docs
           .map((l) => {
@@ -215,7 +213,7 @@ Click **✨ Smart Estimate** in the [Marketplace](/marketplace) listing form to 
 
   // 7. ESG REPORTS / IMPACT CERTIFICATES
   if (q.includes("certificate") || q.includes("impact") || q.includes("esg") || q.includes("co2") || q.includes("report")) {
-    return `Every completed transaction generates an **AI-backed RAG Environmental Impact Certificate**:
+    return `Every completed transaction on **eWasteMart** records tangible environmental benefits:
 
 - **CO₂ Offset:** Calculated against equivalent primary smelting emissions.
 - **Critical Metals Saved:** Quantified in kg of gold, copper, and rare-earth elements.

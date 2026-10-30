@@ -27,8 +27,8 @@ const academicPillars = [
   {
     icon: Sparkles,
     subject: "Generative AI",
-    title: "Few-Shot LLM Listings & RAG ESG Reports",
-    description: "Few-shot structured prompt engineering converts raw device specs into optimal marketplace listings, while RAG-backed generators create verifiable environmental compliance certificates.",
+    title: "Few-Shot Listings & Diffusion Photo Synthesizer",
+    description: "Few-shot structured prompt engineering converts raw device specs into optimal marketplace listings, while diffusion models generate photorealistic e-waste photos.",
     tags: ["Few-Shot Prompting", "JSON Schema Enforcement", "Multi-turn Memory"],
     color: "from-amber-500/10 to-orange-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400",
   },
@@ -315,7 +315,7 @@ export default function Home() {
                 {
                   step: "04",
                   title: "Doorstep OTP & ESG",
-                  desc: "Courier schedules pickup with 6-digit OTP verification. Once collected, an automated RAG Environmental Impact Certificate is minted.",
+                  desc: "Courier schedules pickup with 6-digit OTP verification. Once collected, escrow funds are automatically released to the seller.",
                 },
               ].map((item, idx) => (
                 <div

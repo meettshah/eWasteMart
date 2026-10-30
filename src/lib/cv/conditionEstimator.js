@@ -3,30 +3,17 @@
 //
 // Academic Concepts Demonstrated:
 //   - RGB to HSV color space conversion
-//   - Color histogram analysis (hue histogram for burn/rust detection)
-//   - Sobel edge detection operator (horizontal + vertical kernels)
-//   - Edge density as a surface damage proxy
-//   - Multi-factor decision fusion
+//   - Color histogram analysis (hue histogram for burn, rust, and clean glass detection)
+//   - Sobel edge detection operator (3x3 horizontal and vertical gradient kernels)
+//   - Edge density distinguishing display glass seams from fracture damage
+//   - Multi-factor decision fusion for e-waste grading
 //
 // References:
 //   - Sobel, I. & Feldman, G. (1968). A 3x3 Isotropic Gradient Operator
 //     for Image Processing. Stanford AI Project.
-//   - Smith, A.R. (1978). Color gamut transform pairs.
-//     SIGGRAPH '78, 12-19.
+//   - Smith, A.R. (1978). Color gamut transform pairs. SIGGRAPH '78.
 // =====================================================================
 
-// -------------------------------------------------------------------
-// COLOR SPACE CONVERSION: RGB → HSV
-// -------------------------------------------------------------------
-
-/**
- * Convert a single pixel from RGB to HSV.
- * @param {number} r  [0-255]
- * @param {number} g  [0-255]
- * @param {number} b  [0-255]
- * @returns {{ h: number, s: number, v: number }}
- *   h: [0-360], s: [0-1], v: [0-1]
- */
 function rgbToHsv(r, g, b) {
   const rn = r / 255, gn = g / 255, bn = b / 255;
   const max = Math.max(rn, gn, bn);
@@ -47,35 +34,17 @@ function rgbToHsv(r, g, b) {
   return { h, s, v };
 }
 
-// -------------------------------------------------------------------
-// SOBEL EDGE DETECTION
-// -------------------------------------------------------------------
-
-/**
- * Compute edge density using Sobel operators.
- * High edge density + localized to damaged regions → surface damage.
- *
- * Sobel X:  [-1, 0, 1]    Sobel Y:  [-1, -2, -1]
- *           [-2, 0, 2]              [ 0,  0,  0]
- *           [-1, 0, 1]              [ 1,  2,  1]
- *
- * @param {Uint8ClampedArray} data  - RGBA pixel data
- * @param {number} width
- * @param {number} height
- * @returns {number} edgeDensity: fraction of pixels above edge threshold [0-1]
- */
 function sobelEdgeDensity(data, width, height) {
   const Kx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
   const Ky = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
 
-  // Convert to grayscale first
   const gray = new Float32Array(width * height);
   for (let i = 0; i < width * height; i++) {
     gray[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
   }
 
   let edgeCount = 0;
-  const threshold = 50;
+  const threshold = 55;
 
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
@@ -96,65 +65,42 @@ function sobelEdgeDensity(data, width, height) {
   return totalInnerPixels > 0 ? edgeCount / totalInnerPixels : 0;
 }
 
-// -------------------------------------------------------------------
-// HSV HISTOGRAM ANALYSIS
-// -------------------------------------------------------------------
-
-/**
- * Analyze HSV histograms to detect:
- *   - Burn marks: very dark regions (V < 0.2)
- *   - Rust: orange-brown hues (H = 10-40, S > 0.4)
- *   - Greenish corrosion: (H = 80-160, S > 0.3)
- *
- * @param {Uint8ClampedArray} data
- * @returns {{ burnFraction, rustFraction, corrosionFraction, darkFraction }}
- */
 function analyzeHsvHistogram(data) {
   const pixels = data.length / 4;
-  let burnCount = 0, rustCount = 0, corrosionCount = 0;
+  let darkCount = 0, screenGlassCount = 0, burnCount = 0, rustCount = 0, corrosionCount = 0;
 
   for (let i = 0; i < pixels; i++) {
     const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
     const { h, s, v } = rgbToHsv(r, g, b);
 
-    // Burn mark: very dark pixels
-    if (v < 0.20) burnCount++;
+    // Dark pixels (displays, shadows, or charring)
+    if (v < 0.25) {
+      darkCount++;
+      // Clean unpowered display glass or dark bezels
+      if (s < 0.35) {
+        screenGlassCount++;
+      } else if (h >= 10 && h <= 55 && s > 0.45 && v < 0.18) {
+        // High saturation brownish or singed dark pixels = thermal char
+        burnCount++;
+      }
+    }
 
-    // Rust: orange-brown hue with reasonable saturation
-    if (h >= 5 && h <= 40 && s > 0.35 && v > 0.25) rustCount++;
+    // Rust: orange-brown hue with strong saturation
+    if (h >= 10 && h <= 40 && s > 0.45 && v > 0.25) rustCount++;
 
-    // Corrosion (green/blue-green patina on metals)
-    if (h >= 80 && h <= 165 && s > 0.30 && v > 0.20) corrosionCount++;
+    // Corrosion: green/teal patina on circuit metals
+    if (h >= 85 && h <= 165 && s > 0.40 && v > 0.20) corrosionCount++;
   }
 
   return {
-    burnFraction:      burnCount      / pixels,
-    rustFraction:      rustCount      / pixels,
+    darkFraction: darkCount / pixels,
+    screenGlassFraction: screenGlassCount / pixels,
+    burnFraction: burnCount / pixels,
+    rustFraction: rustCount / pixels,
     corrosionFraction: corrosionCount / pixels,
   };
 }
 
-// -------------------------------------------------------------------
-// MAIN CONDITION ESTIMATOR
-// -------------------------------------------------------------------
-
-/**
- * Estimate the physical condition of an e-waste item from a photo.
- * Must be called in a browser environment (Canvas API).
- *
- * @param {File|Blob} imageFile
- * @returns {Promise<{
- *   condition: "working"|"repairable"|"scrap",
- *   confidence: number,
- *   reasons: string[],
- *   details: {
- *     edgeDensity: number,
- *     burnFraction: number,
- *     rustFraction: number,
- *     corrosionFraction: number,
- *   }
- * }>}
- */
 export async function estimateCondition(imageInput) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -175,13 +121,13 @@ export async function estimateCondition(imageInput) {
 
     img.onload = () => {
       try {
-        const MAX_DIM = 200;
-        const scale = Math.min(1, MAX_DIM / Math.max(img.width || 200, img.height || 200));
-        const w = Math.max(16, Math.round((img.width || 200) * scale));
-        const h = Math.max(16, Math.round((img.height || 200) * scale));
+        const MAX_DIM = 220;
+        const scale = Math.min(1, MAX_DIM / Math.max(img.width || 220, img.height || 220));
+        const w = Math.max(16, Math.round((img.width || 220) * scale));
+        const h = Math.max(16, Math.round((img.height || 220) * scale));
 
         const canvas = document.createElement("canvas");
-        canvas.width  = w;
+        canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, w, h);
@@ -189,66 +135,80 @@ export async function estimateCondition(imageInput) {
         const { data } = ctx.getImageData(0, 0, w, h);
         if (isObjectUrl) URL.revokeObjectURL(url);
 
-        // --- Computer Vision Analysis ---
         const edgeDensity = sobelEdgeDensity(data, w, h);
-        const { burnFraction, rustFraction, corrosionFraction } = analyzeHsvHistogram(data);
+        const { darkFraction, screenGlassFraction, burnFraction, rustFraction, corrosionFraction } = analyzeHsvHistogram(data);
 
-        // --- Decision Logic ---
         const reasons = [];
-        let damageScore = 0; // 0=clean, accumulates per damage type
+        let damageScore = 0;
 
-        if (burnFraction > 0.15) {
+        // Display glass detection
+        if (screenGlassFraction > 0.08) {
+          reasons.push(`Unpowered display glass / dark casing detected (${(screenGlassFraction * 100).toFixed(1)}% area)`);
+        }
+
+        if (burnFraction > 0.05) {
           damageScore += 3;
-          reasons.push(`Burn/char marks detected (${(burnFraction * 100).toFixed(1)}% dark pixels)`);
-        } else if (burnFraction > 0.07) {
-          damageScore += 1;
-          reasons.push(`Minor dark/burn regions detected`);
+          reasons.push(`Thermal scorch / char marks detected (${(burnFraction * 100).toFixed(1)}% pixels)`);
         }
 
-        if (rustFraction > 0.12) {
+        if (rustFraction > 0.05) {
           damageScore += 2;
-          reasons.push(`Rust/corrosion detected (${(rustFraction * 100).toFixed(1)}% orange-brown areas)`);
-        } else if (rustFraction > 0.05) {
-          damageScore += 1;
-          reasons.push(`Light rust traces detected`);
+          reasons.push(`Ferrous oxidation / rust detected (${(rustFraction * 100).toFixed(1)}% pixels)`);
         }
 
-        if (corrosionFraction > 0.08) {
-          damageScore += 1;
-          reasons.push(`Metal corrosion/patina detected`);
+        if (corrosionFraction > 0.04) {
+          damageScore += 2;
+          reasons.push(`Chemical or patina corrosion detected (${(corrosionFraction * 100).toFixed(1)}% pixels)`);
         }
 
-        if (edgeDensity > 0.35) {
-          damageScore += 1;
-          reasons.push(`High surface edge density — possible cracks or component exposure`);
-        }
-
-        // --- Determine Condition ---
-        let condition, confidence;
-        if (damageScore === 0) {
-          condition  = "working";
-          confidence = 0.72;
-          reasons.push("No significant damage markers detected — device appears intact");
-        } else if (damageScore <= 2) {
-          condition  = "repairable";
-          confidence = 0.65;
+        // Distinguish multiple-device grid edges from shattered fractures
+        if (edgeDensity > 0.38) {
+          damageScore += 2;
+          reasons.push("High edge density: surface fractures, cracked screen glass, or exposed hardware borders");
+        } else if (edgeDensity > 0.18) {
+          if (screenGlassFraction > 0.08) {
+            reasons.push("Multiple device bezel borders detected (device batch collection)");
+          } else {
+            damageScore += 1;
+            reasons.push("Moderate surface wear & edge transitions");
+          }
         } else {
-          condition  = "scrap";
-          confidence = 0.70;
+          reasons.push("Smooth, uniform casing surface intact");
         }
 
-        // Confidence is reduced if damage score is in the middle (ambiguous)
-        if (damageScore === 1 || damageScore === 2) confidence = 0.58;
+        let condition = "working";
+        let confidence = 0.85;
+
+        if (damageScore >= 3) {
+          condition = "scrap";
+          confidence = Math.min(0.95, 0.70 + damageScore * 0.05);
+        } else if (damageScore >= 1) {
+          condition = "repairable";
+          confidence = Math.min(0.88, 0.65 + damageScore * 0.08);
+        } else {
+          condition = "working";
+          confidence = 0.88;
+        }
+
+        const stats = {
+          edgeDensity: Number((edgeDensity * 100).toFixed(1)),
+          darkFraction: Number((darkFraction * 100).toFixed(1)),
+          screenGlassFraction: Number((screenGlassFraction * 100).toFixed(1)),
+          burnFraction: Number((burnFraction * 100).toFixed(1)),
+          rustFraction: Number((rustFraction * 100).toFixed(1)),
+          corrosionFraction: Number((corrosionFraction * 100).toFixed(1)),
+        };
 
         resolve({
           condition,
           confidence: Number(confidence.toFixed(2)),
           reasons,
-          details: {
-            edgeDensity:      Number(edgeDensity.toFixed(4)),
-            burnFraction:     Number(burnFraction.toFixed(4)),
-            rustFraction:     Number(rustFraction.toFixed(4)),
-            corrosionFraction:Number(corrosionFraction.toFixed(4)),
+          metrics: stats,
+          details: stats,
+          pipeline: {
+            sobelKernel: "3x3 isotropic gradient",
+            colorSpace: "RGB -> HSV cylindrical conversion",
+            damageScore,
           },
         });
       } catch (err) {
@@ -259,7 +219,7 @@ export async function estimateCondition(imageInput) {
 
     img.onerror = () => {
       if (isObjectUrl) URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image for condition analysis."));
+      reject(new Error("Failed to load image for visual condition estimation."));
     };
 
     img.src = url;

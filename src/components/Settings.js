@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast, Toaster } from "react-hot-toast";
+import Link from "next/link";
 import { 
   Bell, 
   Building, 
@@ -18,13 +19,18 @@ import {
   LogOut,
   AlertTriangle,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles,
+  Eye,
+  Dna,
+  ExternalLink
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const tabs = [
   { id: "account", label: "Account Profile", icon: User, desc: "Personal info & contact details" },
+  { id: "academic", label: "Academic AI Labs", icon: Sparkles, desc: "Individual page visibility & lab access" },
   { id: "security", label: "Security & Access", icon: LockKeyhole, desc: "Password & authentication" },
   { id: "organization", label: "Organization", icon: Building, desc: "Company & GST compliance", roles: ["bulk_seller", "recycler", "enterprise"] },
   { id: "payment", label: "Payment Routing", icon: CreditCard, desc: "Instant UPI & bank accounts" },
@@ -37,6 +43,41 @@ export default function SettingsPane() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
+  // Independent Page Visibility Toggles
+  const [navConfig, setNavConfig] = useState({
+    genAi: true,
+    softComputing: true,
+    computerVision: true,
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setNavConfig({
+        genAi: localStorage.getItem("ewastemart_nav_gen_ai") !== "false",
+        softComputing: localStorage.getItem("ewastemart_nav_soft_computing") !== "false",
+        computerVision: localStorage.getItem("ewastemart_nav_computer_vision") !== "false",
+      });
+    }
+  }, []);
+
+  const togglePageNav = (pageKey, label) => {
+    setNavConfig((prev) => {
+      const nextVal = !prev[pageKey];
+      const updated = { ...prev, [pageKey]: nextVal };
+      
+      const storageKey = pageKey === "genAi" 
+        ? "ewastemart_nav_gen_ai" 
+        : pageKey === "softComputing" 
+        ? "ewastemart_nav_soft_computing" 
+        : "ewastemart_nav_computer_vision";
+        
+      localStorage.setItem(storageKey, String(nextVal));
+      window.dispatchEvent(new CustomEvent("academic_nav_change", { detail: updated }));
+      toast.success(`${label} ${nextVal ? "shown in navigation" : "hidden from navigation"}`);
+      return updated;
+    });
+  };
+
   const userRole = session?.user?.role || "user";
   const visibleTabs = tabs.filter(t => !t.roles || t.roles.includes(userRole));
   const active = visibleTabs.find((tab) => tab.id === activeTab) || visibleTabs[0];
@@ -144,7 +185,7 @@ export default function SettingsPane() {
                 </span>
               </div>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Manage your credentials, business verification, and communication rules.
+                Manage your profile, business verification, and independent academic page navigation toggles.
               </p>
             </div>
           </div>
@@ -295,6 +336,168 @@ export default function SettingsPane() {
                       <Save className="h-4 w-4" /> {isSaving ? "Saving..." : "Save Account Details"}
                     </button>
                   </form>
+                )}
+
+                {/* ACADEMIC SUITE TAB (Individual Toggle Option for Each Page) */}
+                {activeTab === "academic" && (
+                  <div className="max-w-3xl space-y-6">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        Page Visibility Controls
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Turn individual navigation buttons ON or OFF for each academic evaluation subject. Toggles apply immediately to the top navigation bar and mobile drawer.
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      
+                      {/* TOGGLE 1: GENERATIVE AI */}
+                      <div className="rounded-2xl border border-violet-200/80 bg-violet-50/70 p-5 dark:border-violet-900/50 dark:bg-violet-950/30 transition-all">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3.5">
+                            <div className="h-11 w-11 rounded-2xl bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-violet-600/30">
+                              <Sparkles className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-950 dark:text-white">
+                                  Generative AI Page
+                                </h4>
+                                <span className="font-mono text-[10px] text-violet-700 dark:text-violet-300 font-bold bg-violet-100 dark:bg-violet-900/50 px-2 py-0.5 rounded-md">
+                                  /gen-ai
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                Stateful Gemini Chatbot (1A), RAG Impact Certificates (1B), Dynamic Listing Synthesizer (1C), and Diffusion Photo Synthesizer (1D).
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Toggle Switch */}
+                          <button
+                            type="button"
+                            onClick={() => togglePageNav("genAi", "Generative AI")}
+                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              navConfig.genAi ? "bg-violet-600" : "bg-slate-300 dark:bg-slate-700"
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                navConfig.genAi ? "translate-x-5" : "translate-x-0"
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-violet-200/60 dark:border-violet-900/60 flex items-center justify-between text-xs">
+                          <span className={`font-semibold ${navConfig.genAi ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
+                            {navConfig.genAi ? "● Visible in Navigation" : "○ Hidden from Navigation"}
+                          </span>
+                          <Link href="/gen-ai" className="font-bold text-violet-700 dark:text-violet-300 hover:underline inline-flex items-center gap-1">
+                            Direct Link <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* TOGGLE 2: SOFT COMPUTING */}
+                      <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/70 p-5 dark:border-indigo-900/50 dark:bg-indigo-950/30 transition-all">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3.5">
+                            <div className="h-11 w-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-600/30">
+                              <Dna className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-950 dark:text-white">
+                                  Soft Computing Page
+                                </h4>
+                                <span className="font-mono text-[10px] text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded-md">
+                                  /soft-computing
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                Mamdani Fuzzy Inference System for Bid Fairness (2A), Real Database Genetic Algorithm for Buyer-Seller Optimization (2B).
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Toggle Switch */}
+                          <button
+                            type="button"
+                            onClick={() => togglePageNav("softComputing", "Soft Computing")}
+                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              navConfig.softComputing ? "bg-indigo-600" : "bg-slate-300 dark:bg-slate-700"
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                navConfig.softComputing ? "translate-x-5" : "translate-x-0"
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-indigo-200/60 dark:border-indigo-900/60 flex items-center justify-between text-xs">
+                          <span className={`font-semibold ${navConfig.softComputing ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
+                            {navConfig.softComputing ? "● Visible in Navigation" : "○ Hidden from Navigation"}
+                          </span>
+                          <Link href="/soft-computing" className="font-bold text-indigo-700 dark:text-indigo-300 hover:underline inline-flex items-center gap-1">
+                            Direct Link <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* TOGGLE 3: COMPUTER VISION */}
+                      <div className="rounded-2xl border border-teal-200/80 bg-teal-50/70 p-5 dark:border-teal-900/50 dark:bg-teal-950/30 transition-all">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3.5">
+                            <div className="h-11 w-11 rounded-2xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-600/30">
+                              <Eye className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-950 dark:text-white">
+                                  Computer Vision Page
+                                </h4>
+                                <span className="font-mono text-[10px] text-teal-700 dark:text-teal-300 font-bold bg-teal-100 dark:bg-teal-900/50 px-2 py-0.5 rounded-md">
+                                  /computer-vision
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                MobileNet v2 CNN Device Detection (3A), Laplacian Variance Sharpness (3B), Sobel 3×3 Edge & HSV Damage Estimator (3C).
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Toggle Switch */}
+                          <button
+                            type="button"
+                            onClick={() => togglePageNav("computerVision", "Computer Vision")}
+                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              navConfig.computerVision ? "bg-teal-600" : "bg-slate-300 dark:bg-slate-700"
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                navConfig.computerVision ? "translate-x-5" : "translate-x-0"
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-teal-200/60 dark:border-teal-900/60 flex items-center justify-between text-xs">
+                          <span className={`font-semibold ${navConfig.computerVision ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
+                            {navConfig.computerVision ? "● Visible in Navigation" : "○ Hidden from Navigation"}
+                          </span>
+                          <Link href="/computer-vision" className="font-bold text-teal-700 dark:text-teal-300 hover:underline inline-flex items-center gap-1">
+                            Direct Link <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
                 )}
 
                 {/* ORGANIZATION TAB */}
@@ -471,4 +674,3 @@ export default function SettingsPane() {
     </main>
   );
 }
-

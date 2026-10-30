@@ -1,20 +1,17 @@
-/**
- * POST /api/pickup/[id]/complete
- */
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Pickup from "@/models/Pickup";
-import { Order } from "@/models/Order";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ message: "Not logged in" }, { status: 401 });
 
-  await mongooseConnect();
   const { id } = await params;
-  const pickup = await Pickup.findById(id).select("-otpHash");
+  const pickup = await prisma.pickup.findUnique({
+    where: { id },
+    include: { listing: true, order: true }
+  });
   if (!pickup) return NextResponse.json({ message: "Pickup not found" }, { status: 404 });
 
   const isSeller = pickup.sellerEmail === session.user.email;
@@ -23,12 +20,16 @@ export async function POST(req, { params }) {
 
   if (pickup.status !== "picked_up") return NextResponse.json({ message: "Invalid status" }, { status: 400 });
 
-  pickup.status = "completed";
-  pickup.completedAt = new Date();
-  await pickup.save();
+  await prisma.pickup.update({
+    where: { id },
+    data: {
+      status: "completed",
+      completedAt: new Date()
+    }
+  });
 
-  const order = await Order.findById(pickup.orderId).lean();
-  if (order?.paytmOrderId) {
+  const order = pickup.order;
+  if (order?.orderId) {
     try {
       const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
       await fetch(`${baseUrl}/api/paytm/payout`, {
@@ -37,7 +38,7 @@ export async function POST(req, { params }) {
           "Content-Type": "application/json",
           "x-internal-secret": process.env.INTERNAL_API_SECRET || "",
         },
-        body: JSON.stringify({ orderId: order.paytmOrderId, pickupId: pickup._id.toString() }),
+        body: JSON.stringify({ orderId: order.orderId, pickupId: pickup.id }),
       });
     } catch (err) {
       console.error("[Pickup Complete] Payout trigger failed:", err.message);
@@ -50,7 +51,7 @@ export async function POST(req, { params }) {
       userId: pickup.sellerId,
       userEmail: pickup.sellerEmail,
       title: "Pickup Completed",
-      message: `${pickup.recyclerName} has successfully completed the pickup for "${pickup.listingTitle}". The payment will be transferred to your account shortly.`,
+      message: `Pickup has been successfully completed for "${pickup.listing?.title || 'E-waste'}". The escrow payment will be released shortly.`,
       type: "PICKUP",
       link: `/pickups`,
       channels: ["IN_APP", "EMAIL"]

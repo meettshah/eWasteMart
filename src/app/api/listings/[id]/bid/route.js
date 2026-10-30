@@ -1,8 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Listing from "@/models/ListingModel";
+import { prisma } from "@/lib/prisma";
 import { evaluateBidFairness } from "@/lib/fuzzy/priceEvaluator";
 
 const BIDDER_ROLES = ["recycler", "enterprise"];
@@ -16,9 +15,12 @@ export async function POST(req, { params }) {
     return NextResponse.json({ message: "Only recyclers and enterprises can bid on e-waste." }, { status: 403 });
   }
 
-  await mongooseConnect();
   const { id } = await params;
-  const listing = await Listing.findById(id);
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    include: { bids: true }
+  });
+
   if (!listing) return NextResponse.json({ message: "Listing not found." }, { status: 404 });
   if (listing.status !== "open") return NextResponse.json({ message: "This listing is already sold." }, { status: 400 });
   if (listing.sellerEmail === session.user.email) {
@@ -31,8 +33,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ message: "Please enter a valid bid amount." }, { status: 400 });
   }
 
-  // --- Soft Computing: Fuzzy Logic Fairness Evaluation (Feature 2A) ---
-  // Evaluate bid fairness using Mamdani fuzzy inference before storing
+  // Soft Computing: Fuzzy Logic Fairness Evaluation (Feature 2A)
   const fairness = evaluateBidFairness(
     amount,
     listing.askingPrice,
@@ -40,35 +41,46 @@ export async function POST(req, { params }) {
     listing.quantity
   );
 
-  listing.bids.push({
-    bidderId:     session.user.id,
-    bidderName:   session.user.name,
-    bidderEmail:  session.user.email,
-    bidderRole:   session.user.role,
-    amount,
-    message:      body.message || "",
-    fuzzyFairness: {
-      score: fairness.score,
-      label: fairness.label,
-      color: fairness.color,
-    },
+  const newBid = await prisma.bid.create({
+    data: {
+      listingId: id,
+      bidderId: session.user.id,
+      bidderName: session.user.name,
+      bidderEmail: session.user.email,
+      bidderRole: session.user.role,
+      amount,
+      message: body.message || "",
+      fuzzyFairness: {
+        score: fairness.score,
+        label: fairness.label,
+        color: fairness.color,
+      },
+    }
   });
-  await listing.save();
 
   try {
     const { dispatchNotification } = await import("@/lib/notifications");
     await dispatchNotification({
-      userId:    listing.sellerId,
+      userId: listing.sellerId,
       userEmail: listing.sellerEmail,
-      title:     "New Bid Received",
-      message:   `${session.user.name} placed a bid of Rs. ${amount.toLocaleString("en-IN")} on your listing "${listing.title}". Fairness: ${fairness.label} (${fairness.score}/100).`,
-      type:      "BID",
-      link:      "/marketplace",
-      channels:  ["IN_APP", "EMAIL"],
+      title: "New Bid Placed!",
+      message: `${session.user.name} placed a bid of Rs. ${amount.toLocaleString("en-IN")} on your listing "${listing.title}". Fairness score: ${fairness.score}/100 (${fairness.label}).`,
+      type: "BID",
+      link: "/marketplace",
+      channels: ["IN_APP", "EMAIL"]
     });
   } catch (err) {
     console.error("Notification error:", err);
   }
 
-  return NextResponse.json({ ...listing.toObject(), _fuzzyFairness: fairness }, { status: 201 });
+  const updatedListing = await prisma.listing.findUnique({
+    where: { id },
+    include: { bids: true }
+  });
+
+  return NextResponse.json({
+    ...updatedListing,
+    _id: updatedListing.id,
+    bids: (updatedListing.bids || []).map((b) => ({ ...b, _id: b.id }))
+  });
 }

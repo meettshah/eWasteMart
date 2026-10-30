@@ -1,35 +1,34 @@
-import { mongooseConnect } from "@/lib/mongoose";
-import Login from "@/models/LoginModel";
+import { prisma } from "@/lib/prisma";
 import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from 'bcryptjs';
 
 const login = async (credentials) => {
-    try{
-        await mongooseConnect();
+    try {
+        const email = credentials.email?.toLowerCase().trim();
+        const user = await prisma.user.findUnique({
+            where: { email }
+        });
+        if (!user) throw new Error("Wrong Credentials.");
 
-        const user = await Login.findOne({email: credentials.email?.toLowerCase().trim()});
-        if(!user) throw new Error("Wrong Credentials.");
-
-        const isCorrect = await bcrypt.compare(credentials.password, user.password);
-        if(!isCorrect) throw new Error("Wrong Credentials.");
+        const isCorrect = await bcrypt.compare(credentials.password, user.password || "");
+        if (!isCorrect) throw new Error("Wrong Credentials.");
 
         if (!user.isEmailVerified) {
             throw new Error("Please verify your email before logging in.");
         }
 
         return {
-            id: user._id.toString(),
+            id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
         };
-    } catch (error){
+    } catch (error) {
         console.error("Login Error: ", error);
         throw new Error(error.message || "Something went wrong.");
     }
-
 }
 
 export const authOptions = {
@@ -40,12 +39,12 @@ export const authOptions = {
         CredentialsProvider({
             name: 'credentials',
             credentials: {},
-            async authorize(credentials){
-                try{
+            async authorize(credentials) {
+                try {
                     const user = await login(credentials);
                     return user;
                 }
-                catch(error){
+                catch (error) {
                     throw new Error(error.message || "Failed to login.")
                 }
             }
@@ -55,25 +54,27 @@ export const authOptions = {
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "dummy",
         })
     ],
-    callbacks : {
+    callbacks: {
         async signIn({ user, account, profile }) {
-            if (account.provider === "google") {
+            if (account?.provider === "google") {
                 try {
-                    await mongooseConnect();
-                    let dbUser = await Login.findOne({ email: user.email });
+                    const normalizedEmail = user.email?.toLowerCase().trim();
+                    let dbUser = await prisma.user.findUnique({
+                        where: { email: normalizedEmail }
+                    });
                     
                     if (!dbUser) {
-                        // Create the user with pending role
-                        dbUser = await Login.create({
-                            name: user.name,
-                            email: user.email,
-                            isEmailVerified: true, // Google verifies emails
-                            role: "pending"
+                        dbUser = await prisma.user.create({
+                            data: {
+                                name: user.name || "Google User",
+                                email: normalizedEmail,
+                                isEmailVerified: true,
+                                role: "pending"
+                            }
                         });
                     }
                     
-                    // Attach db info to the token user object
-                    user.id = dbUser._id.toString();
+                    user.id = dbUser.id;
                     user.role = dbUser.role;
                     return true;
                 } catch (error) {
@@ -83,8 +84,8 @@ export const authOptions = {
             }
             return true;
         },
-        async jwt({token, user, trigger, session}){
-            if(user){
+        async jwt({ token, user, trigger, session }) {
+            if (user) {
                 token.name = user.name;
                 token.email = user.email;
                 token.role = user.role;
@@ -96,20 +97,26 @@ export const authOptions = {
                 token.role = session.role;
             }
 
-            // Always fetch latest role from DB just in case, especially for pending roles
+            // Always fetch latest role from PostgreSQL just in case, especially for pending roles
             if (token.email) {
-                await mongooseConnect();
-                const dbUser = await Login.findOne({ email: token.email });
-                if (dbUser) {
-                    token.role = dbUser.role;
+                try {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { email: token.email.toLowerCase().trim() }
+                    });
+                    if (dbUser) {
+                        token.role = dbUser.role;
+                        token.id = dbUser.id;
+                    }
+                } catch (e) {
+                    console.error("JWT sync error:", e);
                 }
             }
 
             return token;
         },
 
-        async session({session, token}){
-            if(token){
+        async session({ session, token }) {
+            if (token) {
                 session.user.name = token.name;
                 session.user.email = token.email;
                 session.user.role = token.role;
@@ -127,4 +134,4 @@ export const authOptions = {
 
 const authHandler = NextAuth(authOptions);
 
-export {authHandler as GET, authHandler as POST}
+export { authHandler as GET, authHandler as POST }

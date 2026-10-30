@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
@@ -7,11 +9,6 @@ import { Button } from "@nextui-org/react";
 import PaytmCheckout from "@/components/PaytmCheckout";
 import PickupScheduler from "@/components/PickupScheduler";
 import PickupCard from "@/components/PickupCard";
-import AIListingHelper from "@/components/AIListingHelper";
-import DeviceScanner from "@/components/DeviceScanner";
-import FuzzyBadge from "@/components/FuzzyBadge";
-import BestMatchButton from "@/components/BestMatchButton";
-import ImpactReport from "@/components/ImpactReport";
 import { useSearchParams, useRouter } from "next/navigation";
 import { 
   CheckCircle2, 
@@ -71,9 +68,7 @@ export default function Marketplace() {
   const [estimating, setEstimating] = useState(false);
   const [estimateResult, setEstimateResult] = useState(null);
   const [message, setMessage] = useState("");
-  const [showAITools, setShowAITools] = useState(false);
-  const [activeAITab, setActiveAITab] = useState("camera"); // 'camera' | 'writer'
-  const [highlightedBidId, setHighlightedBidId] = useState(null);
+      const [highlightedBidId, setHighlightedBidId] = useState(null);
   
   // Filtering & Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,6 +115,36 @@ export default function Marketplace() {
 
   useEffect(() => {
     loadListings();
+
+    // Check if prefill data exists from Gen AI Studio
+    try {
+      const prefillRaw = localStorage.getItem("ewastemart_prefill_listing");
+      if (prefillRaw) {
+        const prefillData = JSON.parse(prefillRaw);
+        if (prefillData && prefillData.title) {
+          setListingForm((prev) => ({
+            ...prev,
+            title: prefillData.title || prev.title,
+            category: prefillData.category || prev.category,
+            quantity: prefillData.quantity || prev.quantity,
+            unit: prefillData.unit || prev.unit,
+            condition: prefillData.condition || prev.condition,
+            location: prefillData.location || prev.location,
+            askingPrice: prefillData.askingPrice || prev.askingPrice,
+            description: prefillData.description || prev.description,
+            imageUrl: prefillData.imageUrl || prev.imageUrl || "",
+          }));
+          setMessage("✨ AI listing details loaded from Gen AI Studio! Review and publish below.");
+          localStorage.removeItem("ewastemart_prefill_listing");
+          setTimeout(() => {
+            const el = document.getElementById("create-listing-form");
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 350);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse prefill listing:", e);
+    }
   }, []);
 
   const updateListingField = (field, value) => {
@@ -142,8 +167,7 @@ export default function Marketplace() {
       await axios.post("/api/listings", payload);
       setListingForm(emptyListing);
       setEstimateResult(null);
-      setShowAITools(false);
-      setMessage("Listing created successfully. Verified recyclers can now place bids.");
+            setMessage("Listing created successfully. Verified recyclers can now place bids.");
       await loadListings();
     } catch (error) {
       setMessage(error.response?.data?.message || "Could not create listing.");
@@ -304,76 +328,6 @@ export default function Marketplace() {
           </div>
         )}
 
-        {/* ─── Academic Faculty Showcase Navigation Hub ───────────── */}
-        <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-sky-500/10 to-indigo-500/10 p-5 shadow-sm dark:border-emerald-500/20">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-black">🎓</span>
-                <h2 className="text-sm font-extrabold font-heading text-slate-900 dark:text-white">
-                  Academic Evaluation &amp; Demonstration Hub
-                </h2>
-                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                  CV · Soft Computing · Gen AI
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                Live interactive access to all 9 academic modules implemented with mathematical rigour, algorithmic convergence, and zero runtime errors.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Gen AI Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAITools(true);
-                  setActiveAITab("writer");
-                  setTimeout(() => {
-                    document.getElementById("academic-ai-dock")?.scrollIntoView({ behavior: "smooth" });
-                  }, 50);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/50 dark:text-violet-300 shadow-2xs"
-              >
-                <span>🤖</span>
-                <span>Gen AI (1A, 1B, 1C)</span>
-              </button>
-
-              {/* Soft Computing Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAITools(true);
-                  setActiveAITab("camera");
-                  setTimeout(() => {
-                    document.getElementById("academic-ai-dock")?.scrollIntoView({ behavior: "smooth" });
-                  }, 50);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 shadow-2xs"
-              >
-                <span>🧠</span>
-                <span>Soft Computing (2A, 2B, 2C)</span>
-              </button>
-
-              {/* Computer Vision Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAITools(true);
-                  setActiveAITab("camera");
-                  setTimeout(() => {
-                    document.getElementById("academic-ai-dock")?.scrollIntoView({ behavior: "smooth" });
-                  }, 50);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700 transition hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950/50 dark:text-orange-300 shadow-2xs"
-              >
-                <span>👁️</span>
-                <span>Computer Vision (3A, 3B, 3C)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* ─── Search, Tabs & Filter Segment ────────────────────── */}
         <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Status Tabs */}
@@ -427,7 +381,7 @@ export default function Marketplace() {
           
           {/* ─── Left Column: Listing Creation Dock (lg:col-span-4) ─── */}
           <section className="lg:col-span-4 space-y-6">
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card dark:border-slate-800 dark:bg-slate-900">
+            <div id="create-listing-form" className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
                 <div>
                   <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-white">
@@ -577,76 +531,49 @@ export default function Marketplace() {
                     />
                   </div>
 
-                  {/* ─── AI & Vision Smart Tools Dock ─── */}
-                  <div id="academic-ai-dock" className="rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-50/40 p-3.5 dark:border-emerald-500/30 dark:bg-emerald-950/20">
-                    <button
-                      type="button"
-                      onClick={() => setShowAITools(!showAITools)}
-                      className="flex w-full items-center justify-between text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
-                          <Cpu className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-slate-900 dark:text-white">
-                            Academic AI & Vision Suite
-                          </span>
-                          <span className="block text-[10px] text-slate-500">
-                            MobileNet Scanner + GenAI Prompt Writer
-                          </span>
-                        </div>
+                  {/* AI Photo Preview if attached */}
+                  {listingForm.imageUrl && (
+                    <div className="relative rounded-2xl overflow-hidden border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/20 p-2.5 flex items-center gap-3">
+                      <img 
+                        src={listingForm.imageUrl} 
+                        alt="E-waste lot" 
+                        className="h-14 w-14 object-cover rounded-xl border border-slate-200 dark:border-slate-700" 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                          ✨ AI Synthesized Photo Attached
+                        </span>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                          Hardware visual asset will be saved to your live listing
+                        </p>
                       </div>
-                      <span className="rounded-full bg-emerald-600/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                        {showAITools ? "Hide" : "Open"}
+                      <button
+                        type="button"
+                        onClick={() => updateListingField("imageUrl", "")}
+                        className="text-xs text-rose-500 hover:text-rose-700 p-1 font-bold"
+                        title="Remove photo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Academic Labs Reference */}
+                  <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 p-3.5 dark:bg-slate-900/40 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-violet-600" />
+                      <span className="text-slate-600 dark:text-slate-400">
+                        Need AI listing copywriting or CV scanner?
                       </span>
-                    </button>
-
-                    {showAITools && (
-                      <div className="mt-4 space-y-3 border-t border-emerald-500/20 pt-3">
-                        {/* Tab Switcher */}
-                        <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-emerald-100/60 p-1 dark:bg-emerald-900/40">
-                          <button
-                            type="button"
-                            onClick={() => setActiveAITab("camera")}
-                            className={`rounded-lg py-1 text-center text-[11px] font-bold transition-all ${
-                              activeAITab === "camera"
-                                ? "bg-white text-emerald-800 shadow-sm dark:bg-slate-900 dark:text-emerald-300"
-                                : "text-emerald-700/80 hover:text-emerald-900 dark:text-emerald-300/80"
-                            }`}
-                          >
-                            📷 Camera Scanner (CV)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setActiveAITab("writer")}
-                            className={`rounded-lg py-1 text-center text-[11px] font-bold transition-all ${
-                              activeAITab === "writer"
-                                ? "bg-white text-emerald-800 shadow-sm dark:bg-slate-900 dark:text-emerald-300"
-                                : "text-emerald-700/80 hover:text-emerald-900 dark:text-emerald-300/80"
-                            }`}
-                          >
-                            ✨ Prompt Writer (GenAI)
-                          </button>
-                        </div>
-
-                        {activeAITab === "camera" ? (
-                          <DeviceScanner
-                            listingForm={listingForm}
-                            onCategoryChange={(cat) => updateListingField("category", cat)}
-                            onConditionChange={(cond) => updateListingField("condition", cond)}
-                          />
-                        ) : (
-                          <AIListingHelper
-                            listingForm={listingForm}
-                            onGenerate={(title, description) => {
-                              updateListingField("title", title);
-                              updateListingField("description", description);
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Link href="/gen-ai" target="_blank" className="font-bold text-violet-600 hover:underline">
+                        Gen AI Lab →
+                      </Link>
+                      <Link href="/computer-vision" target="_blank" className="font-bold text-teal-600 hover:underline">
+                        CV Lab →
+                      </Link>
+                    </div>
                   </div>
 
                   {/* ─── AI Price Estimate Result ─── */}
@@ -842,10 +769,7 @@ export default function Marketplace() {
                       </div>
                     )}
 
-                    {/* ─── Integrated Impact Report Button (Feature 1B) ─── */}
-                    <div className="mt-4">
-                      <ImpactReport listing={listing} />
-                    </div>
+                    
 
                     {/* ─── Payment & Logistics Workflow ─── */}
                     {listing.status === "sold" && (() => {
@@ -924,15 +848,7 @@ export default function Marketplace() {
                           Submitted Offers ({listing.bids?.length || 0})
                         </span>
 
-                        {/* Feature 2B: GA Best Match Button */}
-                        {listing.status === "open" && (
-                          <BestMatchButton
-                            listingId={listing._id}
-                            pendingBids={pendingBids.length}
-                            onHighlight={setHighlightedBidId}
-                            saving={saving}
-                          />
-                        )}
+                        
                       </div>
 
                       <div className="space-y-2">
@@ -959,7 +875,7 @@ export default function Marketplace() {
                                     <span className="text-xs text-slate-500">by {bid.bidderName}</span>
                                     
                                     {/* Feature 2A: Mamdani Fuzzy Logic Rating */}
-                                    <FuzzyBadge fuzzyFairness={bid.fuzzyFairness} bid={bid} listing={listing} />
+                                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-500/20">Verified Offer</span>
 
                                     {isHighlighted && (
                                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">

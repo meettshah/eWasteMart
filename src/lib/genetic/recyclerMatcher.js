@@ -1,15 +1,15 @@
 // =====================================================================
 // Genetic Algorithm — Optimal Recycler/Bid Matching
-// Subject: Soft Computing
+// Subject: Soft Computing (Feature 2B)
 //
 // Academic Concepts Demonstrated:
-//   - Chromosome encoding (permutation representation)
-//   - Fitness function (weighted multi-objective)
-//   - Tournament selection
-//   - Single-point crossover (Order Crossover / OX1)
-//   - Bit-flip mutation (swap mutation for permutations)
-//   - Elitism (preserve best individual across generations)
-//   - Convergence via generation count
+//   - Chromosome encoding (permutation representation over candidates)
+//   - Multi-objective fitness function (Price, Role Credential, Engagement)
+//   - Tournament selection (k=3 tournament)
+//   - Order Crossover (OX1) for permutation integrity without duplicates
+//   - Swap Mutation operator
+//   - Elitism preservation across generational convergence
+//   - Live generational convergence tracking
 //
 // References:
 //   - Goldberg, D.E. (1989). Genetic Algorithms in Search, Optimization, 
@@ -17,79 +17,63 @@
 //   - Holland, J.H. (1975). Adaptation in Natural and Artificial Systems.
 // =====================================================================
 
-// -------------------------------------------------------------------
-// FITNESS FUNCTION
-// Evaluates how good a single bid is as a match for the seller.
-// Weights: price (50%), role reliability (30%), message quality (20%)
-// Returns a score in [0, 1]
-// -------------------------------------------------------------------
-
-const ROLE_SCORE = { enterprise: 1.0, recycler: 0.75 };
-const ROLE_WEIGHT     = 0.30;
-const PRICE_WEIGHT    = 0.50;
-const MESSAGE_WEIGHT  = 0.20;
+export const ROLE_SCORE = { enterprise: 1.0, recycler: 0.80, bulk_seller: 0.60, user: 0.40 };
+export const DEFAULT_WEIGHTS = {
+  price: 0.50,
+  role: 0.30,
+  engagement: 0.20,
+};
 
 /**
- * Compute normalized fitness for a single bid.
- * @param {Object} bid - a bid object from Listing.bids
- * @param {number} maxAmount - max bid amount in the pool (for normalization)
- * @param {number} minAmount - min bid amount in the pool
- * @returns {number} fitness in [0, 1]
+ * Compute normalized multi-objective fitness for an individual candidate bid.
  */
-function bidFitness(bid, maxAmount, minAmount) {
+export function calculateBidFitness(bid, maxAmount, minAmount, weights = DEFAULT_WEIGHTS) {
   const range = maxAmount - minAmount || 1;
-
-  // 1. Normalized price score (higher bid = better for seller)
-  const priceScore = (bid.amount - minAmount) / range;
-
-  // 2. Role reliability score
+  const priceScore = Math.max(0, Math.min(1, (Number(bid.amount) - minAmount) / range));
   const roleScore = ROLE_SCORE[bid.bidderRole] ?? 0.5;
+  
+  const msgLen = (bid.message || "").trim().length;
+  const messageScore = msgLen > 30 ? 1.0 : msgLen > 10 ? 0.6 : 0.2;
 
-  // 3. Message quality score (has meaningful message = better engagement)
-  const messageScore = bid.message && bid.message.trim().length > 20 ? 1.0
-    : bid.message && bid.message.trim().length > 5 ? 0.5
-    : 0.0;
+  const wPrice = weights.price ?? 0.50;
+  const wRole = weights.role ?? 0.30;
+  const wMsg = weights.engagement ?? 0.20;
 
-  return PRICE_WEIGHT * priceScore + ROLE_WEIGHT * roleScore + MESSAGE_WEIGHT * messageScore;
+  const total = (wPrice * priceScore) + (wRole * roleScore) + (wMsg * messageScore);
+  
+  return {
+    total: Number(total.toFixed(4)),
+    priceScore: Number(priceScore.toFixed(3)),
+    roleScore: Number(roleScore.toFixed(3)),
+    messageScore: Number(messageScore.toFixed(3)),
+  };
 }
 
-// -------------------------------------------------------------------
-// GENETIC OPERATORS
-// -------------------------------------------------------------------
-
 /**
- * Tournament selection: pick the fitter of K randomly chosen individuals.
- * @param {number[]} population - array of bid indices (chromosomes)
- * @param {number[]} fitnesses  - fitness score for each individual
- * @param {number}   k          - tournament size
- * @returns {number} selected individual (bid index)
+ * Tournament Selection: Select the highest-fitness chromosome among k randomly picked individuals.
  */
 function tournamentSelect(population, fitnesses, k = 3) {
-  let best = null;
-  let bestFitness = -Infinity;
-  for (let i = 0; i < k; i++) {
-    const candidate = population[Math.floor(Math.random() * population.length)];
-    if (fitnesses[candidate] > bestFitness) {
-      bestFitness = fitnesses[candidate];
-      best = candidate;
+  let bestIdx = Math.floor(Math.random() * population.length);
+  let bestFitness = fitnesses[bestIdx];
+  for (let i = 1; i < k; i++) {
+    const candidateIdx = Math.floor(Math.random() * population.length);
+    if (fitnesses[candidateIdx] > bestFitness) {
+      bestFitness = fitnesses[candidateIdx];
+      bestIdx = candidateIdx;
     }
   }
-  return best;
+  return [...population[bestIdx]];
 }
 
 /**
- * Order Crossover (OX1) for permutation chromosomes.
- * Preserves relative order from parent2 after taking a slice from parent1.
- * @param {number[]} parent1
- * @param {number[]} parent2
- * @returns {number[]} child chromosome
+ * Order Crossover (OX1): Generates child permutation without duplicate genes.
  */
 function orderCrossover(parent1, parent2) {
   const n = parent1.length;
   if (n < 2) return [...parent1];
 
   const start = Math.floor(Math.random() * n);
-  const end   = start + Math.floor(Math.random() * (n - start)) + 1;
+  const end = start + Math.floor(Math.random() * (n - start)) + 1;
 
   const slice = parent1.slice(start, end);
   const remaining = parent2.filter((gene) => !slice.includes(gene));
@@ -97,10 +81,7 @@ function orderCrossover(parent1, parent2) {
 }
 
 /**
- * Swap mutation: randomly swap two genes in the chromosome.
- * @param {number[]} chromosome
- * @param {number}   mutationRate - probability of mutation [0,1]
- * @returns {number[]} mutated chromosome
+ * Swap Mutation: Randomly exchanges two gene positions with mutation probability.
  */
 function swapMutate(chromosome, mutationRate = 0.15) {
   const child = [...chromosome];
@@ -113,52 +94,64 @@ function swapMutate(chromosome, mutationRate = 0.15) {
   return child;
 }
 
-// -------------------------------------------------------------------
-// GENETIC ALGORITHM — MAIN FUNCTION
-// -------------------------------------------------------------------
-
 /**
- * Run a Genetic Algorithm to find the optimal bid for a seller.
- *
- * The GA evolves a population of permutations over bid indices.
- * The first gene of the fittest individual in the final generation
- * is the recommended bid.
- *
- * @param {Object[]} bids        - array of pending bid objects
- * @param {Object}   options     - GA hyperparameters
- * @returns {{ 
- *   bestBidId: string,
- *   bestBidIndex: number,
- *   score: number,
- *   generations: number,
- *   convergenceHistory: number[] 
- * }}
+ * Run Genetic Algorithm to discover optimal recycler matching.
  */
 export function findBestBidGA(bids, options = {}) {
   const {
-    populationSize = 40,
-    generations    = 80,
-    mutationRate   = 0.15,
-    elitismCount   = 2,
-    tournamentSize = 3,
+    populationSize = 50,
+    generations = 100,
+    mutationRate = 0.15,
+    crossoverRate = 0.85,
+    elitismCount = 2,
+    tournamentK = 3,
+    weights = DEFAULT_WEIGHTS,
   } = options;
 
+  if (!bids || bids.length === 0) {
+    throw new Error("No bids available for genetic matching.");
+  }
+
   const n = bids.length;
-  if (n === 0) throw new Error("No bids to evaluate.");
-  if (n === 1) return { bestBidId: bids[0]._id, bestBidIndex: 0, score: 1.0, generations: 0, convergenceHistory: [1.0] };
+  const amounts = bids.map((b) => Number(b.amount) || 0);
+  const maxAmt = Math.max(...amounts, 1);
+  const minAmt = Math.min(...amounts, 0);
 
-  // Pre-compute fitness inputs
-  const amounts = bids.map((b) => b.amount);
-  const maxAmt = Math.max(...amounts);
-  const minAmt = Math.min(...amounts);
+  // Precalculate fitness for each candidate
+  const candidateScores = bids.map((b) => calculateBidFitness(b, maxAmt, minAmt, weights));
 
-  // Pre-compute fitness for each bid (individual, not chromosome)
-  const bidFitnessScores = bids.map((bid) => bidFitness(bid, maxAmt, minAmt));
+  if (n === 1) {
+    const bestBid = bids[0];
+    const scoreObj = candidateScores[0];
+    return {
+      bestBid,
+      bestBidId: bestBid.id || bestBid._id,
+      bestBidIndex: 0,
+      bestFitness: scoreObj.total,
+      score: scoreObj.total,
+      breakdown: {
+        priceScore: scoreObj.priceScore,
+        roleScore: scoreObj.roleScore,
+        messageScore: scoreObj.messageScore,
+      },
+      generationsRun: 1,
+      generations: 1,
+      history: [scoreObj.total],
+      convergenceHistory: [scoreObj.total],
+      algorithm: "Genetic Algorithm (OX1 + Tournament Selection k=3)",
+    };
+  }
 
-  // Chromosome fitness = fitness of the first gene (the recommended bid)
-  const chromFitness = (chromosome) => bidFitnessScores[chromosome[0]];
+  // Chromosome is a permutation of candidate indices 0..n-1
+  // Fitness of chromosome is dominated by the top assigned match (gene 0)
+  // with secondary weight on overall ordering efficiency
+  const chromFitness = (chrom) => {
+    const primary = candidateScores[chrom[0]].total;
+    const secondary = chrom.length > 1 ? candidateScores[chrom[1]].total * 0.15 : 0;
+    return Number((primary + secondary).toFixed(4));
+  };
 
-  // Initialize population: random permutations of bid indices
+  // Initial population
   const indices = Array.from({ length: n }, (_, i) => i);
   let population = Array.from({ length: populationSize }, () => {
     const perm = [...indices];
@@ -169,32 +162,23 @@ export function findBestBidGA(bids, options = {}) {
     return perm;
   });
 
-  const convergenceHistory = [];
-  let eliteChromosomes = [];
+  const history = [];
 
   for (let gen = 0; gen < generations; gen++) {
-    // Evaluate fitness for all chromosomes
     const fitnesses = population.map(chromFitness);
-
-    // Track best fitness this generation
     const genBest = Math.max(...fitnesses);
-    convergenceHistory.push(Number(genBest.toFixed(4)));
+    history.push(Number(genBest.toFixed(4)));
 
-    // Elitism: carry forward top `elitismCount` individuals unchanged
+    // Elitism
     const indexed = fitnesses.map((f, i) => ({ f, i })).sort((a, b) => b.f - a.f);
-    eliteChromosomes = indexed.slice(0, elitismCount).map(({ i }) => [...population[i]]);
+    const nextPopulation = indexed.slice(0, elitismCount).map(({ i }) => [...population[i]]);
 
-    // Build next generation
-    const nextPopulation = [...eliteChromosomes];
-
+    // Reproduction
     while (nextPopulation.length < populationSize) {
-      const p1 = tournamentSelect(indices, bidFitnessScores, tournamentSize);
-      const p2 = tournamentSelect(indices, bidFitnessScores, tournamentSize);
-      // Use actual chromosomes for crossover
-      const chromP1 = population[fitnesses.indexOf(bidFitnessScores[p1])] || population[0];
-      const chromP2 = population[fitnesses.indexOf(bidFitnessScores[p2])] || population[1 % populationSize];
+      const p1 = tournamentSelect(population, fitnesses, tournamentK);
+      const p2 = tournamentSelect(population, fitnesses, tournamentK);
 
-      let child = orderCrossover(chromP1, chromP2);
+      let child = Math.random() < crossoverRate ? orderCrossover(p1, p2) : [...p1];
       child = swapMutate(child, mutationRate);
       nextPopulation.push(child);
     }
@@ -207,17 +191,26 @@ export function findBestBidGA(bids, options = {}) {
   const bestIdx = finalFitnesses.indexOf(Math.max(...finalFitnesses));
   const bestChromosome = population[bestIdx];
   const bestBidIndex = bestChromosome[0];
+  const bestBid = bids[bestBidIndex];
+  const scoreObj = candidateScores[bestBidIndex];
 
   return {
-    bestBidId:          bids[bestBidIndex]._id,
+    bestBid,
+    bestBidId: bestBid.id || bestBid._id,
     bestBidIndex,
-    score:              Number(bidFitnessScores[bestBidIndex].toFixed(4)),
+    bestFitness: scoreObj.total,
+    score: scoreObj.total,
     breakdown: {
-      priceScore:       Number((PRICE_WEIGHT * ((bids[bestBidIndex].amount - minAmt) / (maxAmt - minAmt || 1))).toFixed(3)),
-      roleScore:        Number((ROLE_WEIGHT * (ROLE_SCORE[bids[bestBidIndex].bidderRole] ?? 0.5)).toFixed(3)),
-      messageScore:     Number((MESSAGE_WEIGHT * (bids[bestBidIndex].message?.length > 20 ? 1 : bids[bestBidIndex].message?.length > 5 ? 0.5 : 0)).toFixed(3)),
+      priceScore: scoreObj.priceScore,
+      roleScore: scoreObj.roleScore,
+      messageScore: scoreObj.messageScore,
     },
+    bestChromosome,
+    populationSample: population.slice(0, 8),
+    generationsRun: generations,
     generations,
-    convergenceHistory,
+    history,
+    convergenceHistory: history,
+    algorithm: "Genetic Algorithm (OX1 + Tournament Selection k=3)",
   };
 }

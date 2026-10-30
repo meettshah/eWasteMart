@@ -1,8 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Listing from "@/models/ListingModel";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req, { params }) {
   const session = await getServerSession(authOptions);
@@ -10,9 +9,12 @@ export async function POST(req, { params }) {
     return NextResponse.json({ message: "Please login first." }, { status: 401 });
   }
 
-  await mongooseConnect();
   const { id } = await params;
-  const listing = await Listing.findById(id);
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    include: { bids: true }
+  });
+
   if (!listing) return NextResponse.json({ message: "Listing not found." }, { status: 404 });
   if (listing.sellerEmail !== session.user.email) {
     return NextResponse.json({ message: "Only the listing owner can approve a bid." }, { status: 403 });
@@ -22,15 +24,23 @@ export async function POST(req, { params }) {
   }
 
   const { bidId } = await req.json();
-  const bid = listing.bids.id(bidId);
+  const bid = (listing.bids || []).find((b) => b.id === bidId);
   if (!bid) return NextResponse.json({ message: "Bid not found." }, { status: 404 });
 
-  listing.bids.forEach((currentBid) => {
-    currentBid.status = currentBid._id.equals(bid._id) ? "approved" : "rejected";
-  });
-  listing.approvedBid = bid._id;
-  listing.status = "sold";
-  await listing.save();
+  await prisma.$transaction([
+    prisma.bid.updateMany({
+      where: { listingId: id, id: { not: bidId } },
+      data: { status: "rejected" }
+    }),
+    prisma.bid.update({
+      where: { id: bidId },
+      data: { status: "approved" }
+    }),
+    prisma.listing.update({
+      where: { id },
+      data: { status: "sold", approvedBidId: bidId }
+    })
+  ]);
 
   try {
     const { dispatchNotification } = await import("@/lib/notifications");
@@ -47,5 +57,15 @@ export async function POST(req, { params }) {
     console.error("Notification error:", err);
   }
 
-  return NextResponse.json(listing);
+  const updated = await prisma.listing.findUnique({
+    where: { id },
+    include: { bids: true }
+  });
+
+  return NextResponse.json({
+    ...updated,
+    _id: updated.id,
+    approvedBid: bidId,
+    bids: (updated.bids || []).map((b) => ({ ...b, _id: b.id }))
+  });
 }

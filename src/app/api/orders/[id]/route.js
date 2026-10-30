@@ -1,19 +1,34 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import { Order } from "@/models/Order";
-import Pickup from "@/models/Pickup";
-import Listing from "@/models/ListingModel";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  await mongooseConnect();
   const { id } = await params;
 
-  const order = await Order.findById(id).lean();
+  const order = await prisma.order.findFirst({
+    where: {
+      OR: [
+        { id },
+        { orderId: id }
+      ]
+    },
+    include: {
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          condition: true,
+        }
+      },
+      pickup: true
+    }
+  });
+
   if (!order) return NextResponse.json({ message: "Order not found" }, { status: 404 });
 
   // Ensure user is payer or payee
@@ -21,12 +36,9 @@ export async function GET(req, { params }) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  const listing = await Listing.findById(order.listingId).select("title category condition").lean();
-  const pickup = await Pickup.findOne({ orderId: id }).lean();
-
   return NextResponse.json({
-    order,
-    listing,
-    pickup
+    order: { ...order, _id: order.id },
+    listing: order.listing ? { ...order.listing, _id: order.listing.id } : null,
+    pickup: order.pickup ? { ...order.pickup, _id: order.pickup.id } : null,
   });
 }

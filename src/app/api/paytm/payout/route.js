@@ -1,11 +1,5 @@
-/**
- * POST /api/paytm/payout
- * Internal route to trigger payout to seller. Called when pickup is completed.
- * Secured by INTERNAL_API_SECRET.
- */
 import { NextResponse } from "next/server";
-import { mongooseConnect } from "@/lib/mongoose";
-import { Order } from "@/models/Order";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req) {
   const configuredSecret = process.env.INTERNAL_API_SECRET;
@@ -25,22 +19,21 @@ export async function POST(req) {
     return NextResponse.json({ message: "orderId required" }, { status: 400 });
   }
 
-  await mongooseConnect();
-  
-  const order = await Order.findOne({ paytmOrderId: orderId });
+  const order = await prisma.order.findFirst({
+    where: {
+      OR: [{ orderId }, { id: orderId }]
+    }
+  });
   if (!order) return NextResponse.json({ message: "Order not found" }, { status: 404 });
   
-  if (order.status !== "paid") {
-    return NextResponse.json({ message: "Order not paid" }, { status: 400 });
-  }
-
-  // Real world: Integration with Paytm Payouts API goes here.
-  // We'll mark it as processing.
-  order.payoutStatus = "processing";
-  order.payoutAt = new Date();
-  await order.save();
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      escrowStatus: "released",
+      status: "released",
+      releasedAt: new Date(),
+    }
+  });
   
-  console.log(`[Payout] Processing payout for order ${orderId}, pickup ${pickupId}. Payee: ${order.payeeName} (${order.payeeEmail})`);
-  
-  return NextResponse.json({ message: "Payout initiated", status: "processing" });
+  return NextResponse.json({ message: "Payout initiated", status: "released" });
 }

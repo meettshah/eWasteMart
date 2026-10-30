@@ -1,8 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Login from "@/models/LoginModel";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export async function PATCH(req) {
@@ -22,21 +21,24 @@ export async function PATCH(req) {
             return NextResponse.json({ message: "New password must be at least 6 characters." }, { status: 400 });
         }
 
-        await mongooseConnect();
-        const user = await Login.findOne({ email: session.user.email });
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email.toLowerCase().trim() }
+        });
         
         if (!user) {
             return NextResponse.json({ message: "User not found" }, { status: 404 });
         }
 
-        const isCorrect = await bcrypt.compare(currentPassword, user.password);
+        const isCorrect = await bcrypt.compare(currentPassword, user.password || "");
         if (!isCorrect) {
             return NextResponse.json({ message: "Incorrect current password." }, { status: 403 });
         }
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedNewPassword;
-        await user.save();
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { password: hashedNewPassword }
+        });
 
         return NextResponse.json({ message: "Password updated successfully." });
     } catch (error) {

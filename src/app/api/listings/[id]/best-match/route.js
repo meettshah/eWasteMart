@@ -1,90 +1,110 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Listing from "@/models/ListingModel";
+import { prisma } from "@/lib/prisma";
 import { findBestBidGA } from "@/lib/genetic/recyclerMatcher";
 
 export async function POST(req, { params }) {
-  const session = await getServerSession(authOptions);
-
-  await mongooseConnect();
   const { id } = await params;
-  const listing = await Listing.findById(id).lean();
+
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    include: { bids: true }
+  });
 
   if (!listing) {
     return NextResponse.json({ message: "Listing not found." }, { status: 404 });
   }
 
-  let pendingBids = (listing.bids || []).filter((b) => b.status === "pending");
+  let candidateBids = (listing.bids || [])
+    .filter((b) => b.status === "pending")
+    .map((b) => ({ ...b, _id: b.id }));
+
   let isDemoSimulation = false;
 
-  // If fewer than 2 bids exist, synthesize 4 realistic candidate recycler bids so faculty can inspect the GA
-  if (pendingBids.length < 2) {
+  // If fewer than 2 pending bids exist on this listing, generate candidate bids from live PostgreSQL recycler profiles
+  if (candidateBids.length < 2) {
     isDemoSimulation = true;
     const basePrice = Number(listing.askingPrice) || 24000;
-    pendingBids = [
-      {
-        _id: "demo-bid-1",
-        bidderName: "EcoTech Recyclers Pvt Ltd (Certified R2)",
+
+    const realRecyclers = await prisma.recyclerProfile.findMany({
+      take: 6,
+      orderBy: { createdAt: "desc" }
+    });
+
+    if (realRecyclers.length >= 2) {
+      const multipliers = [0.95, 1.08, 0.88, 1.02, 1.12, 0.92];
+      candidateBids = realRecyclers.map((r, idx) => ({
+        id: `rec-sim-${r.id}`,
+        _id: `rec-sim-${r.id}`,
+        bidderName: r.name,
+        bidderEmail: r.email,
         bidderRole: "recycler",
-        amount: Math.round(basePrice * 0.94),
-        message: "Govt-authorized e-waste recycler with zero-landfill certification and 48-hour door pickup.",
-      },
-      {
-        _id: "demo-bid-2",
-        bidderName: "Apex Precious Metal Refiners",
-        bidderRole: "enterprise",
-        amount: Math.round(basePrice * 1.08),
-        message: "High-volume precious metal recovery center. Instant Razorpay escrow settlement.",
-      },
-      {
-        _id: "demo-bid-3",
-        bidderName: "GreenFuture Scrap Aggregator",
-        bidderRole: "bulk_seller",
-        amount: Math.round(basePrice * 0.81),
-        message: "Regional scrap collector with self-arranged transport.",
-      },
-      {
-        _id: "demo-bid-4",
-        bidderName: "Urban Miners Hub (ISO 14001)",
-        bidderRole: "recycler",
-        amount: Math.round(basePrice * 0.99),
-        message: "Certified PCB dismantling facility providing verified carbon credit redemption.",
-      },
-    ];
+        amount: Math.round(basePrice * (multipliers[idx % multipliers.length])),
+        message: `${r.description || 'Govt-authorized recycling facility'} — Specialization: ${r.typeWaste || 'Mixed e-waste'} with verified circular recovery.`,
+      }));
+    } else {
+      candidateBids = [
+        {
+          id: "sim-1",
+          _id: "sim-1",
+          bidderName: "EcoTech Recyclers Pvt Ltd (Certified R2)",
+          bidderRole: "recycler",
+          amount: Math.round(basePrice * 0.96),
+          message: "Govt-authorized e-waste recycler with zero-landfill certification and 48-hour door pickup.",
+        },
+        {
+          id: "sim-2",
+          _id: "sim-2",
+          bidderName: "Apex Precious Metal Refiners",
+          bidderRole: "enterprise",
+          amount: Math.round(basePrice * 1.08),
+          message: "High-volume precious metal recovery center. Instant escrow settlement.",
+        },
+        {
+          id: "sim-3",
+          _id: "sim-3",
+          bidderName: "Urban Miners Hub (ISO 14001)",
+          bidderRole: "recycler",
+          amount: Math.round(basePrice * 0.99),
+          message: "Certified PCB dismantling facility providing verified carbon credit redemption.",
+        },
+        {
+          id: "sim-4",
+          _id: "sim-4",
+          bidderName: "GreenFuture Scrap Aggregator",
+          bidderRole: "bulk_seller",
+          amount: Math.round(basePrice * 0.85),
+          message: "Regional scrap collector with self-arranged transport.",
+        },
+      ];
+    }
   }
 
   try {
-    const result = findBestBidGA(pendingBids, {
+    const result = findBestBidGA(candidateBids, {
       populationSize: 50,
-      generations:    100,
-      mutationRate:   0.15,
-      elitismCount:   2,
-      tournamentSize: 3,
+      generations: 100,
+      mutationRate: 0.15,
+      crossoverRate: 0.85,
+      tournamentK: 3,
     });
-
-    const bestBid = pendingBids.find((b) => String(b._id) === String(result.bestBidId)) || pendingBids[0];
 
     return NextResponse.json({
-      bestBid: {
-        _id:        bestBid._id,
-        bidderName: bestBid.bidderName,
-        bidderRole: bestBid.bidderRole,
-        amount:     bestBid.amount,
-        message:    bestBid.message,
-      },
-      ga: {
-        score:              result.score,
-        breakdown:          result.breakdown,
-        generations:        result.generations,
-        convergenceHistory: result.convergenceHistory,
-        totalBidsEvaluated: pendingBids.length,
-        isDemoSimulation,
-      },
+      bestBid: result.bestBid,
+      bestBidId: result.bestBidId,
+      bestFitness: result.bestFitness,
+      score: result.score,
+      breakdown: result.breakdown,
+      generationsRun: result.generationsRun,
+      algorithm: result.algorithm,
+      totalBidsConsidered: candidateBids.length,
+      history: result.history,
+      populationSample: result.populationSample,
+      isDemoSimulation,
     });
-  } catch (error) {
-    console.error("GA matching error:", error.message);
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  } catch (err) {
+    console.error("GA matching error:", err);
+    return NextResponse.json({ message: "Genetic algorithm execution failed." }, { status: 500 });
   }
 }

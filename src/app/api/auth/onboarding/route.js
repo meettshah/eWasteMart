@@ -1,8 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { mongooseConnect } from "@/lib/mongoose";
-import Login from "@/models/LoginModel";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req) {
     const session = await getServerSession(authOptions);
@@ -17,10 +16,10 @@ export async function POST(req) {
             return NextResponse.json({ message: "Invalid role selected" }, { status: 400 });
         }
 
-        await mongooseConnect();
-        
-        // We only allow setting the role if it's currently "pending"
-        const user = await Login.findOne({ email: session.user.email });
+        const email = session.user.email?.toLowerCase().trim();
+        const user = await prisma.user.findUnique({
+            where: { email }
+        });
         
         if (!user) {
             return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -30,10 +29,12 @@ export async function POST(req) {
             return NextResponse.json({ message: "Role is already set" }, { status: 403 });
         }
 
-        user.role = role;
-        await user.save();
+        const updated = await prisma.user.update({
+            where: { id: user.id },
+            data: { role }
+        });
 
-        return NextResponse.json({ message: "Role updated successfully", user });
+        return NextResponse.json({ message: "Role updated successfully", user: { ...updated, _id: updated.id } });
     } catch (error) {
         console.error("Onboarding Error:", error);
         return NextResponse.json({ message: "Failed to set role" }, { status: 500 });

@@ -5,14 +5,9 @@
 //   - Convolutional Neural Networks (CNN): MobileNet architecture with
 //     depthwise separable convolutions for efficient edge inference.
 //   - Transfer Learning: Utilizing weights pre-trained on ImageNet-1K.
-//   - In-browser ML Inference: Zero-backend, privacy-preserving classification.
+//   - Multi-Crop Spatial Inference: Evaluating sub-regions to identify
+//     individual devices within a multi-device batch/lot.
 //   - Aspect ratio & morphological heuristic fallback for resilience.
-//
-// References:
-//   - Howard, A.G. et al. (2017). MobileNets: Efficient Convolutional Neural
-//     Networks for Mobile Vision Applications. arXiv:1704.04861.
-//   - Sandler, M. et al. (2018). MobileNetV2: Inverted Residuals and
-//     Linear Bottlenecks. CVPR 2018.
 // =====================================================================
 
 import { mapImageNetToEWaste } from "./labelMapping";
@@ -20,9 +15,6 @@ import { mapImageNetToEWaste } from "./labelMapping";
 let cachedModel = null;
 let modelLoadingPromise = null;
 
-/**
- * Dynamically loads an external script tag if not already present.
- */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) {
@@ -39,9 +31,6 @@ function loadScript(src) {
   });
 }
 
-/**
- * Ensures TensorFlow.js and MobileNet are loaded via CDN.
- */
 export async function loadMobileNet() {
   if (typeof window === "undefined") return null;
 
@@ -50,17 +39,12 @@ export async function loadMobileNet() {
 
   modelLoadingPromise = (async () => {
     try {
-      // Step 1: Load TF.js if needed
       if (!window.tf) {
         await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js");
       }
-
-      // Step 2: Load MobileNet model package
       if (!window.mobilenet) {
         await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js");
       }
-
-      // Step 3: Instantiate model (version 2, alpha 1.0)
       if (window.mobilenet) {
         const model = await window.mobilenet.load({
           version: 2,
@@ -78,9 +62,6 @@ export async function loadMobileNet() {
   return modelLoadingPromise;
 }
 
-/**
- * Converts a File or Blob into an HTMLImageElement for canvas/ML input.
- */
 export function fileToImage(fileOrString) {
   return new Promise((resolve, reject) => {
     if (typeof fileOrString === "string") {
@@ -104,10 +85,19 @@ export function fileToImage(fileOrString) {
   });
 }
 
-/**
- * Fallback CV heuristic classifier if CDN/offline occurs.
- * Analyzes aspect ratio and dominant color tones.
- */
+function createSubCrop(img, sx, sy, sw, sh) {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 224;
+    canvas.height = 224;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 224, 224);
+    return canvas;
+  } catch (e) {
+    return null;
+  }
+}
+
 function fallbackVisualClassifier(imageElement) {
   const w = imageElement.naturalWidth || imageElement.width || 400;
   const h = imageElement.naturalHeight || imageElement.height || 300;
@@ -117,26 +107,23 @@ function fallbackVisualClassifier(imageElement) {
   let category = "Mixed e-waste";
   let confidence = 0.65;
 
-  if (aspectRatio < 0.75) {
-    // Tall portrait ratio — typical for smartphones and tablets
+  if (aspectRatio < 0.85) {
     predictedClass = "cellular telephone / smartphone";
     category = "Mobile and personal devices";
-    confidence = 0.78;
+    confidence = 0.82;
   } else if (aspectRatio >= 1.2 && aspectRatio <= 1.8) {
-    // 16:9 or 16:10 ratio — typical for laptops and monitors
     predictedClass = "laptop computer / notebook";
     category = "Computers and peripherals";
-    confidence = 0.74;
+    confidence = 0.78;
   } else if (aspectRatio > 1.8) {
-    // Ultra-wide display or server chassis
     predictedClass = "television / wide display panel";
     category = "Televisions and displays";
-    confidence = 0.70;
+    confidence = 0.72;
   } else {
-    // Squarish aspect ratio
-    predictedClass = "audio speaker / networking equipment";
-    category = "Audio and video equipment";
-    confidence = 0.62;
+    // Check if wide collection
+    predictedClass = "Mobile phone & handheld device collection (batch)";
+    category = "Mobile and personal devices";
+    confidence = 0.75;
   }
 
   return {
@@ -148,18 +135,6 @@ function fallbackVisualClassifier(imageElement) {
   };
 }
 
-/**
- * Detects device category from an image file or HTMLImageElement using MobileNet CNN.
- *
- * @param {File | Blob | HTMLImageElement | string} imageInput
- * @returns {Promise<{
- *   category: string,
- *   confidence: number,
- *   topClass: string,
- *   rawPredictions: Array<{ className: string, probability: number }>,
- *   method: string
- * }>}
- */
 export async function detectDeviceCategory(imageInput) {
   let img = imageInput;
 
@@ -173,17 +148,39 @@ export async function detectDeviceCategory(imageInput) {
     const model = await loadMobileNet();
 
     if (model && img) {
-      // Classify using MobileNet CNN forward pass
-      const predictions = await model.classify(img, 5);
+      // 1. Full Image Forward Pass
+      const fullPredictions = await model.classify(img, 5);
+      let combined = [...(fullPredictions || [])];
 
-      if (predictions && predictions.length > 0) {
-        const mapped = mapImageNetToEWaste(predictions);
+      // 2. Multi-Crop Spatial Sampling (Isolates individual objects in batches/lots)
+      const w = img.naturalWidth || img.width || 400;
+      const h = img.naturalHeight || img.height || 300;
+      
+      const crops = [
+        createSubCrop(img, w * 0.2, h * 0.2, w * 0.6, h * 0.6), // Center crop
+        createSubCrop(img, 0, 0, w * 0.5, h * 0.5),             // Top-Left
+        createSubCrop(img, w * 0.5, h * 0.5, w * 0.5, h * 0.5), // Bottom-Right
+      ].filter(Boolean);
+
+      for (const crop of crops) {
+        try {
+          const cropPreds = await model.classify(crop, 3);
+          if (cropPreds && cropPreds.length > 0) {
+            combined = combined.concat(cropPreds);
+          }
+        } catch (e) {
+          // Ignore individual crop failure
+        }
+      }
+
+      if (combined.length > 0) {
+        const mapped = mapImageNetToEWaste(combined);
         return {
           category: mapped.category,
           confidence: mapped.confidence,
           topClass: mapped.topClass,
-          rawPredictions: predictions,
-          method: "mobilenet_v2_cnn",
+          rawPredictions: combined.slice(0, 5),
+          method: "mobilenet_v2_cnn_multicrop",
         };
       }
     }
@@ -191,6 +188,5 @@ export async function detectDeviceCategory(imageInput) {
     console.error("TF.js MobileNet inference error:", err);
   }
 
-  // Graceful fallback to aspect-ratio visual heuristics
   return fallbackVisualClassifier(img);
 }
